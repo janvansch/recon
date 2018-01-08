@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <!--
+        *************************************************************
+        * Product: PolOwn - Version 00                              *
+        * Created by: Johannes van Schalkwyk                        *
+        * Location: c:\Node\PolOwn\frontend\index00.html            *
+        *************************************************************
+    -->
+
+    <title>PolOwn | Policy Owner Maintenance</title>
+
+    <meta charset="utf-8">
+
+    <meta name="keywords" content="JavaScript, NodeJS, MySQLWeb, Ajax, Client, Freelance, IA, UI, UXD" />
+    <meta name="description" content="Policy Owner Maintenance System" />
+    <meta name="creator" content="J.M.A. van Schalkwyk" />
+    
+    <!-- link script files -->
+    <script type="text/javascript" src="js\script.js"></script>
+    
+    <!-- Link Style Sheets -->
+	<link rel="stylesheet" href="css\style.css">
+    <!--
+    <link rel="stylesheet" href="responsive.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    -->
+    
+</head>
+
+<body onload="setup()">
+    
+    <!-- Start Overlay -->
+    <div id="overlay"></div>
+    <!-- End Overlay -->
+    <!-- Start Special Centered Box -->
+    <div id="specialBox">
+        <p>Select the required combination of Insurance Company, Branch Agent and Adviser codes:</p>
+        <table id="linklist">
+            <thead id="linkhead">
+                <tr>
+                    <th>Company</th>
+                    <th>BAC</th>
+                    <th>Adviser</th>
+                </tr>
+                <tr>
+                    <th>
+                        <!-- <input type="text" ID="company" onkeydown="Filter(this)" /> -->
+                        <input type="text" id="company" onchange="Filter(this)" size="10"/>
+                    </th>
+                    <th>
+                        <!-- <input type="text" ID="bac"     onkeydown="Filter(this)" /> -->
+                        <input type="text" id="agent"     onchange="Filter(this)" size="10"/>
+                    </th>
+                    <th>
+                        <!-- <input type="text" ID="adviser" onkeydown="Filter(this)" /> -->
+                        <input type="text" id="adviser" onchange="Filter(this)" size="10"/>
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="linkbody">
+                <!-- body content is created from DB data via code -->
+            </tbody>
+        </table>
+        <br>
+        <button onmousedown="toggleOverlay()">Close</button>
+    </div>
+    <!-- End Special Centered Box -->
+
+    <h2>Commission File Register:</h2>
+
+    <form action="/" method="get">
+
+        Select view:
+        <input type="radio" name="filter" value="0" checked> Default
+        <input type="radio" name="filter" value="1"> All
+        <input type="radio" name="filter" value="2"> Specified >
+
+        From year:
+        <input type="text" name="fromYear">
+
+        To year:
+        <input type="text" name="toYear">
+
+        From period:
+        <select id="fromPer" name="fromPeriod">
+            <option value="01">01</option>
+            <option value="02">02</option>
+            <option value="03">03</option>
+            <option value="04">04</option>
+            <option value="05">05</option>
+            <option value="06">06</option>
+            <option value="07">07</option>
+            <option value="08">08</option>
+            <option value="09">09</option>
+            <option value="10">10</option> 
+            <option value="11">11</option> 
+            <option value="12">12</option> 
+        </select>
+
+        To period:
+        <select id="toPer" name="toPeriod">
+            <option value="01">01</option>
+            <option value="02">02</option>
+            <option value="03">03</option>
+            <option value="04">04</option>
+            <option value="05">05</option>
+            <option value="06">06</option>
+            <option value="07">07</option>
+            <option value="08">08</option>
+            <option value="09">09</option>
+            <option value="10">10</option> 
+            <option value="11">11</option> 
+            <option value="12">12</option> 
+        </select>
+
+        <input type="submit" value="Refresh data">
+
+    </form>
+
+    <pre id="fileReg">
+    DBCONTENT
+    </pre>
+
+    <hr />
+
+    <h2>Load File:</h2>    
+    <h3>To load commission file select it below and click "Load File"</h3>
+    <input type="file" id="fileUpload" size="60">
+    
+    Delimiter:
+    <input type="radio" name="fileDelimiter" value="0" checked>Comma
+    <input type="radio" name="fileDelimiter" value="1">Semicolon
+    <input type="button" value="Load File" onclick="Upload()">
+
+    <hr />
+
+    <h2> Data loaded:</h2>
+    <h3>To commit the data loaded provide the following information and click "Commit Data"</h3>
+
+    File Source:
+    <input list="providers"  placeholder="File Provider" name="fileRegData" size="20">
+        <datalist id="providers">
+            <option value="SANTAM">
+            <option value="AUTO &amp; GENERAL">
+            <option value="MUTUAL &amp; FEDERAL">
+            <option value="ECHELON">
+            <option value="REFERRALS">
+            <option value="GLACIER">
+            <option value="C SURE">
+            <option value="LANDMARK">
+            <option value="SHA">
+            <option value="MERX">
+            <option value="MIRABILIS">
+            <option value="ALEX FORBES">
+            <option value="ZURICH">
+            <option value="GUARD RISK">
+        </datalist>
+
+    <input list="periods" placeholder="Period" name="fileRegData" size="6">
+        <datalist id="periods">
+           <option value="01">
+           <option value="02">
+           <option value="03">
+           <option value="04">
+           <option value="05">
+           <option value="06">
+           <option value="07">
+           <option value="08">
+           <option value="09">
+           <option value="10">
+           <option value="11">
+           <option value="12">
+        </datalist> 
+
+    <input list="years" placeholder="Year" name="fileRegData" size="6">
+        <datalist id="years">
+           <option value="2011">
+           <option value="2012">
+           <option value="2013">
+           <option value="2014">
+           <option value="2015">
+           <option value="2016">
+           <option value="2017">
+           <option value="2018">
+           <option value="2019">
+           <option value="2020"> 
+           <option value="2021"> 
+           <option value="2022">
+         </datalist>
+
+    <input type="button" id="dataCommit" value="Commit File Data" onclick = "commitFileData()">
+
+    <hr>
+
+    <h3 id="dList"> Data list</h3>
+
+    <div id="tablePos"></div>
+
+    <hr>
+
+    <div id="modal_wrapper">
+        <div id="modal_window">
+
+            <div style="text-align: right;">
+                <a id="modal_close" href="#">
+                    close <b>X</b>
+                </a>
+            </div>
+
+            <h3>Edit data and click "submit" to commit changes:</h3>
+
+            <form id="modal_feedback" method="POST" action="/updateTrx" method="get" accept-charset="UTF-8">
+                <!-- removed original and added content generation with JS Code -->
+                    <!-- Start Normal Page Content -->
+                <div id="wrapper">
+                    <!-- <button onmousedown="toggleOverlay()">Edit Company, Branch Agent and Adviser code</button> -->
+                </div>
+            </form>
+        </div> <!-- #modal_window -->
+    </div> <!-- #modal_wrapper -->
+
+	
+
+	<noscript>Sorry, your browser does not support JavaScript!</noscript>
+
+</body>
+
+</html>
+
