@@ -103,8 +103,8 @@
 
   <h2>Load Data:</h2>
   <h3>Select data type:</h3>
-  <input type="radio" name="filter" value="0" checked> Place File Data
-  <input type="radio" name="filter" value="1"> Management Information Data
+  <input type="radio" name="dataSource" value="0" checked> Place File Data
+  <input type="radio" name="dataSource" value="1"> Management Information Data
 
   <h3>Select file below and click "Load File"</h3>
   <input type="file" id="fileUpload" size="60">
@@ -112,7 +112,7 @@
   Delimiter:
   <input type="radio" name="fileDelimiter" value="0" checked>Comma
   <input type="radio" name="fileDelimiter" value="1">Semicolon
-  <input type="button" value="Load File" onclick="dataLoad()">
+  <input type="button" value="Load File" onclick="loadData()">
 
   <hr />
 

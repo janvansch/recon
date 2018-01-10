@@ -7,5 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "J.M.A. van Schalkwyk",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "mongodb": "^3.0.1",
+    "mongoose": "^4.13.9"
+  }
 }

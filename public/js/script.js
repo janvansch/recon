@@ -2,22 +2,72 @@
  * File load and display functions section *
  *******************************************/
 //
+// Retrieve options selected and start relevant load processing
+//
+function loadData() {
+  console.log("Load Data started");
+  //
+  // determine file name
+  //
+  var fileName = document.getElementById("fileUpload");
+  //
+  // determine file type
+  //
+  var radioButton = document.getElementsByName("dataSource");
+  for (var j=0; j < radioButton.length; j++) {
+      if (radioButton[j].checked) {
+          var dataSource = radioButton[j].value;
+          console.log(">>> Data Source:", dataSource);
+      }
+  }
+  //
+  // determine the selected delimiter
+  //
+  var radioButton = document.getElementsByName("fileDelimiter");
+  for (var j=0; j < radioButton.length; j++) {
+      if (radioButton[j].checked) {
+          var cellDelimiter = radioButton[j].value;
+          console.log(">>> Delimiter:", cellDelimiter);
+      }
+  }
+  if (dataSource == 0) {
+    //
+    // load file data definition
+    //
+    var fileRules = readRules(dataSource);
+    var listPrompt = 'Data list - Place File data';
+
+  }
+  else if (dataSource == 1) {
+    //
+    // load file data definition
+    //
+    var fileRules = readRules(dataSource);
+    var listPrompt = 'Data list - MI data';
+
+  }
+  //
+  // Extract data from file and display
+  //
+  readData(fileName, cellDelimiter, fileRules, (fileData) => {
+    displayData(fileData, listPrompt, fileRules);
+  });
+}
+//
 // Extract file data from text file and load into an array for processing of the format rules
 //
-function dataLoad() {
-  //
-  // load file data definition
-  //
-    console.log(">>> Started Loading file:");
-  var objRules = readRules();
-    console.log(">>> File def rules acquired:");
+function readData(fileUpload, cellDelimiter, objRules, callback) {
   //
   // Extract data from selected file
   //
   var fileData = [];
   var rowCount = 0;
   var columnCount = 0;
-  var fileUpload = document.getElementById("fileUpload");
+  var columnRule = objRules.filedef.length;
+
+  console.log(">>> Number of columns:", columnRule);
+
+  // var fileUpload = document.getElementById("fileUpload");
   var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.csv|.txt)$/; // a regular expression
   if (regex.test(fileUpload.value.toLowerCase())) {
       if (typeof (FileReader) !== "undefined") {
@@ -34,46 +84,38 @@ function dataLoad() {
               //
               // Check for blank last rows
               //
-              if (rows[rowCount] !== '') {
+              if (rows[rowCount] == null) {
                 rowCount = rowCount - 1;
               }
               //
-              // determine the selected delimiter
+              // select split method
               //
-              var radioButton = document.getElementsByName("fileDelimiter");
-              for (var j=0; j < radioButton.length; j++) {
-                  if (radioButton[j].checked) {
-                      var cellDelimiter = radioButton[j].value;
-                      console.log(">>> Delimiter:", cellDelimiter);
-                  }
+              if (cellDelimiter == 0) {
+                  var splitter = ",";
               }
-              //
-              // split rows into cells using the selected cell delimiter
-              //
+              else {
+                  var splitter = ";";
+              }
               for (var i = 0; i < rowCount; i++) {
                   //
                   // cells is an array of the content of the cells of a row
                   //
-                  if (cellDelimiter == 0) {
-                      var cells = rows[i].split(",");
-                  }
-                  else {
-                      var cells = rows[i].split(";");
-                  }
+                  var cells = rows[i].split(splitter);
                   //
                   // detemine the number of columns
                   //
                   columnCount = cells.length;
+                  // console.log("Number of Columns vs. Expected", columnCount, columnRule);
                   //
                   // Validate that number of columns ara correct
                   //
-                  try {
-                      if (columnCount != 19) throw "Number of columns incorrect";
-                  }
-                  catch(err) {
-                      console.log("Error: " + err);
-                      alert("column error");
-                  }
+                  // try {
+                  //     if (columnCount != columnRule) throw "Number of columns incorrect";
+                  // }
+                  // catch(err) {
+                  //     console.log("Error: " + err);
+                  //     alert("column error");
+                  // }
                   //
                   // Validate cell data type and size
                   //
@@ -99,16 +141,13 @@ function dataLoad() {
                   fileData.push(cells); // insert cells array into rows array
 
               } // end of row processing
-              //
-              // Display data loaded
-              //
-              // console.log(">>> Call dispDataList: ", fileData)
-              console.log("==> File Data: ", fileData);
-              var listPrompt = 'Data list - File data';
-              dispDataList(fileData, listPrompt);
+
+              // console.log(">>> File Data 2", fileData);
+              //return (fileData
+              callback(fileData);
+
           } // end of file read function definition
           reader.readAsText(fileUpload.files[0]);
-
       } // end of if
       else {
           alert("This browser does not support HTML5.");
@@ -117,17 +156,19 @@ function dataLoad() {
   else {
       alert("Please upload a valid CSV file.");
   }
+
 }
 //
 // Create table to display list content in DOM
 //
-function dispDataList(listContent, listPrompt) {
-  //
-  // Setup
-  //
+function displayData(listContent, listPrompt, objRules) {
   var rowCount = listContent.length;
-  var colCount = listContent[0].length;
-  var objRules = readRules();
+  var dataColCount = listContent[0].length;
+  var colCount = objRules.filedef.length;
+  if (colCount !== dataColCount) {
+    console.log(`==> Err: Column Count issue: expected = ${colCount} data = ${dataColCount}`);
+    alert(`==> Err: Column Count issue: expected = ${colCount} data = ${dataColCount}`);
+  }
   //
   // creates a table element
   //
@@ -183,8 +224,8 @@ function dispDataList(listContent, listPrompt) {
           //
           // insert cell content
           //
-          //tableCell.innerHTML = listContent[i][j].trim();
-          tableCell.innerHTML = listContent[i][j];
+          tableCell.innerHTML = listContent[i][j].trim();
+          // tableCell.innerHTML = listContent[i][j];
       } // end of column loop
   } // end of row loop
   // console.log(">>> Data display table created", table);
@@ -333,34 +374,59 @@ function commitFileData() {
 //
 // Function that return the data definitions as an object
 //
-function readRules() {
-  // var placeFileDef = require("place-file-def.json");
+function readRules(dataSource) {
+  // var placeFileDef = require("place-file-def.json"); ??????
+  if (dataSource == 0) {
     // string with JSON syntax
     var jText = '{ "filedef" : [' +
-        '{ "fcode":"S01" , "fname":"insurance_co_code" , "label":"Product Provider Code" , "datatype":"string" , "size":"3" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
-        '{ "fcode":"S02" , "fname":"marketers_code" , "label":"Marketers Code" , "datatype":"string" , "size":"8" , "used":"false" , "edit":"true" , "blank":"true" , "ref":"false" },' +
-        '{ "fcode":"S03" , "fname":"source_code" , "label":"AGT Code" , "datatype":"string" , "size":"20" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
-        '{ "fcode":"S04" , "fname":"policy_no" , "label":"Policy Number" , "datatype":"string" , "size":"15" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
-        '{ "fcode":"S05" , "fname":"policy_holder" , "label":"Policy Holder" , "datatype":"string" , "size":"50" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-        '{ "fcode":"S06" , "fname":"initials" , "label":"Initials" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-        '{ "fcode":"S07" , "fname":"commission_type" , "label":"Comm Type" , "datatype":"string" , "size":"2" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-        '{ "fcode":"S08" , "fname":"commission_amount" , "label":"Commission (inclusive)" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
-        '{ "fcode":"S09" , "fname":"vat_amount" , "label":"VAT charged" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-        '{ "fcode":"S10" , "fname":"broker_fee_amount" , "label":"Policy Fee" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-        '{ "fcode":"S11" , "fname":"month_commission_amount" , "label":"Monthly Commission" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-        '{ "fcode":"S12" , "fname":"revised_policy_no" , "label":"New Policy Number" , "datatype":"string" , "size":"15" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-        '{ "fcode":"S13" , "fname":"premium_amount" , "label":"GWP" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-        '{ "fcode":"S14" , "fname":"line_of_business" , "label":"Policy Type" , "datatype":"number" , "size":"1" , "used":"true" , "edit":"false" , "ref":"true" },' +
-        '{ "fcode":"S15" , "fname":"branch_agent" , "label":"Branch Agent Code" , "datatype":"string" , "size":"7" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
-        '{ "fcode":"S16" , "fname":"period" , "label":"Commission Period" , "datatype":"string" , "size":"6" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
-        '{ "fcode":"S17" , "fname":"marketers_code_2" , "label":"1st Referrer" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
-        '{ "fcode":"S18" , "fname":"marketers_code_3" , "label":"2nd Referrer" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
-        '{ "fcode":"S19" , "fname":"marketers_code_4" , "label":"3rd Referrer" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" } ]}';
-
-    var obj = JSON.parse(jText); // convert JSON text into JS object
-    // var obj = JSON.parse(placeFileDef); // convert JSON text into JS object
-    console.log("Place File Definition: ", obj);
-    return obj;
+      '{ "fcode":"S01" , "fname":"insurance_co_code" , "label":"Product Provider Code" , "datatype":"string" , "size":"3" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
+      '{ "fcode":"S02" , "fname":"marketers_code" , "label":"Marketers Code" , "datatype":"string" , "size":"8" , "used":"false" , "edit":"true" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"S03" , "fname":"source_code" , "label":"AGT Code" , "datatype":"string" , "size":"20" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
+      '{ "fcode":"S04" , "fname":"policy_no" , "label":"Policy Number" , "datatype":"string" , "size":"15" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
+      '{ "fcode":"S05" , "fname":"policy_holder" , "label":"Policy Holder" , "datatype":"string" , "size":"50" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"S06" , "fname":"initials" , "label":"Initials" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"S07" , "fname":"commission_type" , "label":"Comm Type" , "datatype":"string" , "size":"2" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"S08" , "fname":"commission_amount" , "label":"Commission (inclusive)" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
+      '{ "fcode":"S09" , "fname":"vat_amount" , "label":"VAT charged" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"S10" , "fname":"broker_fee_amount" , "label":"Policy Fee" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"S11" , "fname":"month_commission_amount" , "label":"Monthly Commission" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"S12" , "fname":"revised_policy_no" , "label":"New Policy Number" , "datatype":"string" , "size":"15" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"S13" , "fname":"premium_amount" , "label":"GWP" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"S14" , "fname":"line_of_business" , "label":"Policy Type" , "datatype":"number" , "size":"1" , "used":"true" , "edit":"false" , "ref":"true" },' +
+      '{ "fcode":"S15" , "fname":"branch_agent" , "label":"Branch Agent Code" , "datatype":"string" , "size":"7" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
+      '{ "fcode":"S16" , "fname":"period" , "label":"Commission Period" , "datatype":"string" , "size":"6" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
+      '{ "fcode":"S17" , "fname":"marketers_code_2" , "label":"1st Referrer" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
+      '{ "fcode":"S18" , "fname":"marketers_code_3" , "label":"2nd Referrer" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
+      '{ "fcode":"S19" , "fname":"marketers_code_4" , "label":"3rd Referrer" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" } ]}'
+    ;
+  }
+  else {
+    var jText = '{ "filedef" : [' +
+      '{ "fcode":"I01" , "fname":"fiscal_period" , "label":"Period" , "datatype":"string" , "size":"3" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
+      '{ "fcode":"I02" , "fname":"provider_code" , "label":"Provider Code" , "datatype":"string" , "size":"8" , "used":"false" , "edit":"true" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"I03" , "fname":"provider_broker_code" , "label":"Provider Broker Code" , "datatype":"string" , "size":"20" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
+      '{ "fcode":"I04" , "fname":"sti_pbc" , "label":"STI PBC" , "datatype":"string" , "size":"15" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
+      '{ "fcode":"I05" , "fname":"policy_number" , "label":"Policy Number" , "datatype":"string" , "size":"50" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"I06" , "fname":"sti_pol" , "label":"STI POL" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"I07" , "fname":"product_group" , "label":"Product Group" , "datatype":"string" , "size":"2" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"I08" , "fname":"product_summary" , "label":"Product Summary" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
+      '{ "fcode":"I09" , "fname":"contract_period_from" , "label":"Contract Period From" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"I10" , "fname":"contract_period_to" , "label":"Contract Period To" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"I11" , "fname":"gross_written_prem" , "label":"Gross Written Premium" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"I12" , "fname":"gross_earned_prem" , "label":"Gross Earned Premium" , "datatype":"string" , "size":"15" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"I13" , "fname":"gross_written_comm" , "label":"Gross Written Commission" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fcode":"I14" , "fname":"gross_earned_comm" , "label":"Gross Earned Commission" , "datatype":"number" , "size":"1" , "used":"true" , "edit":"false" , "ref":"true" },' +
+      '{ "fcode":"I15" , "fname":"net_written_prem" , "label":"Net Written Premium" , "datatype":"string" , "size":"7" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
+      '{ "fcode":"I16" , "fname":"net_earned_prem" , "label":"Net Earned Premium" , "datatype":"string" , "size":"6" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
+      '{ "fcode":"I17" , "fname":"net_written_comm" , "label":"Net Written Comm" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
+      '{ "fcode":"I18" , "fname":"net_earned_comm" , "label":"Net Earned Commission" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
+      '{ "fcode":"I19" , "fname":"in_place_file" , "label":"In Place File" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" } ]}'
+    ;
+  }
+  var obj = JSON.parse(jText); // convert JSON text into JS object
+  // var obj = JSON.parse(placeFileDef); // convert JSON text into JS object
+  console.log("Place File Definition: ", obj);
+  return obj;
 }
 
 /*********************
@@ -375,7 +441,7 @@ function formDisable() {
     for (i=0;i < limit; i++) {
        document.forms[0].elements[i].disabled = true;
     }
-}
+};
 function formEnable() {
     // Call to enable  -> document.getElementById("btnPlaceOrder").disabled = false;
     var limit = document.forms[0].elements.length;
@@ -400,7 +466,7 @@ function ChangeColor(tableRow, highLight) {
 //
 function isString(o) {
     return typeof o == "string" || (typeof o == "object" && o.constructor === String);
-}
+};
 //
 // Test if data item is a string
 //
