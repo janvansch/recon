@@ -9,7 +9,7 @@ function loadData() {
   //
   // determine file name
   //
-  var fileName = document.getElementById("fileUpload");
+  var filename = document.getElementById("fileUpload");
   //
   // determine file type
   //
@@ -36,7 +36,6 @@ function loadData() {
     //
     var fileRules = readRules(dataSource);
     var listPrompt = 'Data list - Place File data';
-
   }
   else if (dataSource == 1) {
     //
@@ -44,12 +43,11 @@ function loadData() {
     //
     var fileRules = readRules(dataSource);
     var listPrompt = 'Data list - MI data';
-
   }
   //
   // Extract data from file and display
   //
-  readData(fileName, cellDelimiter, fileRules, (fileData) => {
+  readData(filename, cellDelimiter, fileRules, (fileData) => {
     displayData(fileData, listPrompt, fileRules);
   });
 }
@@ -246,7 +244,133 @@ function displayData(listContent, listPrompt, objRules) {
 //
 // Execute commit request and store file data
 //
+
+//build this as a json string array
+// header1: file information - providerCode, dataType, filename, period - null if dataType = IM, year - null if dataType = IM, timestamp, userId, recordCount
+// header2: provider code from header 1, period from header1 for commission data and from TRX data for IM data, policyNumber from TRX data
+//
+// for every row
+//   read column def and the data in array for every column
+//
+// add period to every comm trx??????
+
 function commitFileData() {
+  //
+  // determine file type
+  //
+  var radioButton = document.getElementsByName("dataSource");
+  for (var j=0; j < radioButton.length; j++) {
+      if (radioButton[j].checked) {
+          var dataSource = radioButton[j].value;
+          console.log(">>> Data Source:", dataSource);
+      }
+  }
+  //
+  // decode dataType
+  //
+  if (dataSource == 0) {
+    var dataType = "COM";
+  }
+  else {
+    var dataType = "IM";
+  }
+  //
+  // Read file definition for file type
+  //
+  var objRules = readRules(dataSource);
+  console.log("File def:", objRules);
+  var timestamp = new Date().getTime();
+
+  //
+  // Get DOM data
+  //
+  var filename = document.getElementById("fileUpload");
+  var input = document.getElementsByName("fileRegData");
+  console.log("Input data:", input[0].value, input[1].value, input[2].value);
+  var trxTable = document.getElementById("dataList");
+  console.log("Data List Table:", trxTable);
+  var rowCount = trxTable.rows.length;
+  console.log("Data List Table rows:", rowCount);
+  var cellCount = trxTable.rows[0].cells.length;
+  console.log("Data List Table cells:", cellCount);
+  //
+  // Extract file register data and convert to a JSON string
+  //
+  var fileRegData = '{ "providerCode" : "' + input[0].value + '", ' +
+                      '"dataType" : "' + dataType + '", ' +
+                      '"filename" : "' + filename + '", ' +
+                      '"period" : "' + input[1].value + '", ' +
+                      '"year" : "' + input[2].value + '", ' +
+                      '"timestamp" : "' + timestamp + '", ' +
+                      '"recordCount" : "' + rowCount + '" }';
+  console.log("=> File Register JSON:", fileRegData);
+  var obj = JSON.parse(fileRegData); // convert JSON text into JS object
+  console.log("=> File Register Obj: ", obj);
+
+  // define file register object
+  var fileRegData = {
+    providerCode : input[0].value,
+    dataType : dataType,
+    filename : filename,
+    period : input[1].value,
+    year : input[2].value,
+    timestamp : timestamp,
+    recordCount : rowCount
+  };
+  // convert to JSON string
+  var fileRegJson = JSON.stringify(fileRegData);
+  console.log("===> File Register JSON: ", fileRegJson);
+
+  //==================================================
+  var key1 = "source";
+  var key2 = "rem_per";
+  var key3 = "rem_year";
+
+  // create send data string
+  var fileRegObj = {};
+    fileRegObj[key1] = input[0].value;
+    fileRegObj[key2] = input[1].value;
+    fileRegObj[key3] = input[2].value;
+
+  console.log("==> File Register Obj:", fileRegObj);
+
+  var fileRegJson = JSON.stringify(fileRegObj);
+  console.log("==> File Register JSON: ", fileRegJson);
+  //==================================================
+
+  //
+  // Extract transaction data from DOM table and convert to a JSON string
+  //
+  var objTrxData = {
+      'data': []
+  };
+  for (var row = 1, r = rowCount; row < r; row++) { // Ignore header row
+    var tmpTrxData = {};
+    for (var cell = 0, c = cellCount; cell < c; cell++) {
+      //
+      // Fill object data array with extracted data rows
+      //
+      var key = objRules.filedef[cell].fname;
+      var data = trxTable.rows[row].cells[cell].innerHTML;
+      // console.log(">>> Cell Info ", key, data);
+      tmpTrxData[key] = data;
+    }
+    //console.log(">>> tmp data ", tmpTrxData);
+    objTrxData.data.push(tmpTrxData);
+  }
+  console.log("===> Data obj:", objTrxData);
+  var jsonTrxData = JSON.stringify(objTrxData.data);
+  console.log("===> JSON Data: ", jsonTrxData);
+
+  var dataSub = {
+    file : fileRegData,
+    transactions : objTrxData
+  };
+  var jsonSubData = JSON.stringify(dataSub);
+  console.log("===> JSON Data: ", jsonSubData);
+}
+
+function commitFileDatazzz() {
     //
     // Send file register data and commission data to server
     // Server will create the file register entry and save the
@@ -315,7 +439,7 @@ function commitFileData() {
                     //
                     // Fill object data array with extracted data rows
                     //
-                    objTrxData.data[r-1] = ({
+                  objTrxData.data[r-1] = ({
                         file_id: respJ.info,
                         trx_type: 'F',
                         insurance_co_code: trxTable.rows[r].cells[0].innerHTML,
@@ -379,48 +503,48 @@ function readRules(dataSource) {
   if (dataSource == 0) {
     // string with JSON syntax
     var jText = '{ "filedef" : [' +
-      '{ "fcode":"S01" , "fname":"insurance_co_code" , "label":"Product Provider Code" , "datatype":"string" , "size":"3" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
-      '{ "fcode":"S02" , "fname":"marketers_code" , "label":"Marketers Code" , "datatype":"string" , "size":"8" , "used":"false" , "edit":"true" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"S03" , "fname":"source_code" , "label":"AGT Code" , "datatype":"string" , "size":"20" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
-      '{ "fcode":"S04" , "fname":"policy_no" , "label":"Policy Number" , "datatype":"string" , "size":"15" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
-      '{ "fcode":"S05" , "fname":"policy_holder" , "label":"Policy Holder" , "datatype":"string" , "size":"50" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"S06" , "fname":"initials" , "label":"Initials" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"S07" , "fname":"commission_type" , "label":"Comm Type" , "datatype":"string" , "size":"2" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"S08" , "fname":"commission_amount" , "label":"Commission (inclusive)" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
-      '{ "fcode":"S09" , "fname":"vat_amount" , "label":"VAT charged" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"S10" , "fname":"broker_fee_amount" , "label":"Policy Fee" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"S11" , "fname":"month_commission_amount" , "label":"Monthly Commission" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"S12" , "fname":"revised_policy_no" , "label":"New Policy Number" , "datatype":"string" , "size":"15" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"S13" , "fname":"premium_amount" , "label":"GWP" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"S14" , "fname":"line_of_business" , "label":"Policy Type" , "datatype":"number" , "size":"1" , "used":"true" , "edit":"false" , "ref":"true" },' +
-      '{ "fcode":"S15" , "fname":"branch_agent" , "label":"Branch Agent Code" , "datatype":"string" , "size":"7" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
-      '{ "fcode":"S16" , "fname":"period" , "label":"Commission Period" , "datatype":"string" , "size":"6" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
-      '{ "fcode":"S17" , "fname":"marketers_code_2" , "label":"1st Referrer" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
-      '{ "fcode":"S18" , "fname":"marketers_code_3" , "label":"2nd Referrer" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
-      '{ "fcode":"S19" , "fname":"marketers_code_4" , "label":"3rd Referrer" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" } ]}'
+      '{ "fname" : "productProviderCode" , "label" : "Product Provider Code" , "datatype" : "string" , "size" : "3" , "required" : "true" },' +
+      '{ "fname" : "marketersCode" , "label" : "Marketers Code" , "datatype" : "string" , "size"  :"8" , "required" : "false" },' +
+      '{ "fname" : "sourceCode" , "label" : "Source Code" , "datatype" : "string" , "size" : "20" , "required" : "true" },' +
+      '{ "fname" : "policyNumber" , "label" : "Policy Number" , "datatype" : "string" , "size" : "15", "required" : "true" },' +
+      '{ "fname" : "policyHolder" , "label" : "Policy Holder" , "datatype" : "string" , "size" : "50" , "required" : "false" },' +
+      '{ "fname" : "initials" , "label" : "Initials" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
+      '{ "fname" : "commissionType" , "label" : "Commission Type" , "datatype" : "string" , "size" : "2" , "required" : "false" },' +
+      '{ "fname" : "commissionAmount" , "label" : "Commission Amount" , "datatype" : "number" , "size" : "12" , "required" : "true" },' +
+      '{ "fname" : "vatAmount" , "label" : "VAT Amount" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
+      '{ "fname" : "brokerFeeAmount" , "label" : "Policy Fee" , "datatype" : "number" , "size":"12" , "required" : "false" },' +
+      '{ "fname" : "monthCommissionAmount" , "label" : "Monthly Commission" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
+      '{ "fname" : "revisedPolicyNumber" , "label" : "Revised Policy Number" , "datatype" : "string" , "size" : "15" , "required" : "false" },' +
+      '{ "fname" : "premiumAmount" , "label" : "Premium Amount" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
+      '{ "fname" : "lineOfBusiness" , "label" : "Policy Type" , "datatype" : "number" , "size" : "1" , "required" : "false" },' +
+      '{ "fname" : "branchAgentCode" , "label" : "Branch Agent Code" , "datatype" : "string" , "size" : "7" , "required" : "true" },' +
+      '{ "fname" : "period" , "label" : "Commission Period" , "datatype" : "number" , "size" : "6" , "required" : "false" },' +
+      '{ "fname" : "firstReferrer" , "label" : "1st Referrer" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
+      '{ "fname" : "secondReferrer" , "label" : "2nd Referrer" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
+      '{ "fname" : "thirdReferrer" , "label" : "3rd Referrer" , "datatype" : "string" , "size" : "8" , "required" : "false" } ]}'
     ;
   }
   else {
     var jText = '{ "filedef" : [' +
-      '{ "fcode":"I01" , "fname":"fiscal_period" , "label":"Period" , "datatype":"string" , "size":"3" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
-      '{ "fcode":"I02" , "fname":"provider_code" , "label":"Provider Code" , "datatype":"string" , "size":"8" , "used":"false" , "edit":"true" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"I03" , "fname":"provider_broker_code" , "label":"Provider Broker Code" , "datatype":"string" , "size":"20" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
-      '{ "fcode":"I04" , "fname":"sti_pbc" , "label":"STI PBC" , "datatype":"string" , "size":"15" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
-      '{ "fcode":"I05" , "fname":"policy_number" , "label":"Policy Number" , "datatype":"string" , "size":"50" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"I06" , "fname":"sti_pol" , "label":"STI POL" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"I07" , "fname":"product_group" , "label":"Product Group" , "datatype":"string" , "size":"2" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"I08" , "fname":"product_summary" , "label":"Product Summary" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
-      '{ "fcode":"I09" , "fname":"contract_period_from" , "label":"Contract Period From" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"I10" , "fname":"contract_period_to" , "label":"Contract Period To" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"I11" , "fname":"gross_written_prem" , "label":"Gross Written Premium" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"I12" , "fname":"gross_earned_prem" , "label":"Gross Earned Premium" , "datatype":"string" , "size":"15" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"I13" , "fname":"gross_written_comm" , "label":"Gross Written Commission" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fcode":"I14" , "fname":"gross_earned_comm" , "label":"Gross Earned Commission" , "datatype":"number" , "size":"1" , "used":"true" , "edit":"false" , "ref":"true" },' +
-      '{ "fcode":"I15" , "fname":"net_written_prem" , "label":"Net Written Premium" , "datatype":"string" , "size":"7" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
-      '{ "fcode":"I16" , "fname":"net_earned_prem" , "label":"Net Earned Premium" , "datatype":"string" , "size":"6" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
-      '{ "fcode":"I17" , "fname":"net_written_comm" , "label":"Net Written Comm" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
-      '{ "fcode":"I18" , "fname":"net_earned_comm" , "label":"Net Earned Commission" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
-      '{ "fcode":"I19" , "fname":"in_place_file" , "label":"In Place File" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" } ]}'
+      '{ "fname":"fiscal_period" , "label":"Period" , "datatype":"string" , "size":"3" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
+      '{ "fname":"provider_code" , "label":"Provider Code" , "datatype":"string" , "size":"8" , "used":"false" , "edit":"true" , "blank":"true" , "ref":"false" },' +
+      '{ "fname":"provider_broker_code" , "label":"Provider Broker Code" , "datatype":"string" , "size":"20" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
+      '{ "fname":"sti_pbc" , "label":"STI PBC" , "datatype":"string" , "size":"15" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
+      '{ "fname":"policy_number" , "label":"Policy Number" , "datatype":"string" , "size":"50" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fname":"sti_pol" , "label":"STI POL" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fname":"product_group" , "label":"Product Group" , "datatype":"string" , "size":"2" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fname":"product_summary" , "label":"Product Summary" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
+      '{ "fname":"contract_period_from" , "label":"Contract Period From" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fname":"contract_period_to" , "label":"Contract Period To" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fname":"gross_written_prem" , "label":"Gross Written Premium" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fname":"gross_earned_prem" , "label":"Gross Earned Premium" , "datatype":"string" , "size":"15" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fname":"gross_written_comm" , "label":"Gross Written Commission" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
+      '{ "fname":"gross_earned_comm" , "label":"Gross Earned Commission" , "datatype":"number" , "size":"1" , "used":"true" , "edit":"false" , "ref":"true" },' +
+      '{ "fname":"net_written_prem" , "label":"Net Written Premium" , "datatype":"string" , "size":"7" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
+      '{ "fname":"net_earned_prem" , "label":"Net Earned Premium" , "datatype":"string" , "size":"6" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
+      '{ "fname":"net_written_comm" , "label":"Net Written Comm" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
+      '{ "fname":"net_earned_comm" , "label":"Net Earned Commission" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
+      '{ "fname":"in_place_file" , "label":"In Place File" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" } ]}'
     ;
   }
   var obj = JSON.parse(jText); // convert JSON text into JS object
