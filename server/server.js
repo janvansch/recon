@@ -1,43 +1,58 @@
+"use strict";
 //=============================================
 require('./config/config');
 //=============================================
+const path = require('path');
 const _ = require('lodash');
+const http = require('http');
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
-const hbs = require('hbs');
+const ejs = require('ejs'); // const hbs = require('hbs');
 const fs = require('fs');
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 var {authenticate} = require('./middleware/authenticate');
+var {saveFileData} = require('./middleware/saveFileData');
 
 const port = process.env.PORT;
-
+const publicPath = path.join(__dirname, '../public');
+// const publicPath = path.join(__dirname, '../public');
 //=============================================
 // Setup Express app
 //=============================================
 var app = express();
-app.use(express.static(__dirname + '/public'));
+console.log("===> Public Path: ", publicPath);
+app.use(express.static(publicPath));
+// app.use(express.static(publicPath));
+//app.use(express.static(__dirname + 'public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 //=============================================
+// Setup EJS
+//=============================================
+app.set('view engine', 'ejs');
+app.engine('html', ejs.renderFile);
+// //app.set('views', path.join(__dirname +'/views'));
+
+//=============================================
 // Setup HBS
 //=============================================
-app.set('view engine', 'hbs');
-// app.set('views', path.join(__dirname,'/views'));
-
-hbs.registerPartials(__dirname + '/views/partials');
-
-hbs.registerHelper('getCurrentYear', () => {
-  return new Date().getFullYear();
-});
-
-hbs.registerHelper('screamIt', (text) => {
-  return text.toUpperCase();
-});
+// app.set('view engine', 'hbs');
+// //app.set('views', path.join(__dirname +'/views'));
+// app.set('views', './views');
+// hbs.registerPartials(__dirname + '/views/partials');
+//
+// hbs.registerHelper('getCurrentYear', () => {
+//   return new Date().getFullYear();
+// });
+//
+// hbs.registerHelper('screamIt', (text) => {
+//   return text.toUpperCase();
+// });
 
 //=============================================
 // Log request
@@ -53,11 +68,40 @@ app.use((req, res, next) => {
 //============================================
 // Routes
 //============================================
-app.get('/', (req, res) => {
-  res.render('index.hbs', {
-    pageTitle: 'Login Page',
-    welcomeMessage: 'Welcome to my website'
+// /bad - send back json with errorMessage
+app.get('/bad', (req, res) => {
+  res.send({
+    errorMessage: 'Unable to handle request'
   });
+});
+
+app.get('/', (req, res) => {
+  // res.render('index.html');
+  res.render('index');
+  //   res.render('index.html', {
+  //  pageTitle: 'Login Page',
+  //  welcomeMessage: 'Welcome to my website'
+  //});
+});
+
+app.post('/saveFileData', (req, res) => {
+  // console.log("File Data: ", req);
+  res.send('ok');
+  // saveFileData(req, () => {
+  //   res.send('ok');
+  // }, (e) => {
+  //   console.log("---> Error Data: ", e);
+  //   res.status(400).send(e);
+  // });
+  // var todo = new Todo({
+  //   text: req.body.text,
+  //   _creator: req.user._id
+  // });
+  // todo.save().then((doc) => {
+  //   res.send(doc);
+  // }, (e) => {
+  //   res.status(400).send(e);
+  // });
 });
 
 app.post('/todos', authenticate, (req, res) => {

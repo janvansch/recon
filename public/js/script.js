@@ -2,8 +2,9 @@
  * File load and display functions section *
  *******************************************/
 //
-// Retrieve options selected and start relevant load processing
-//
+//==================================================
+//  Start file load process with options selected
+//==================================================
 function loadData() {
   console.log("Load Data started");
   //
@@ -51,9 +52,9 @@ function loadData() {
     displayData(fileData, listPrompt, fileRules);
   });
 }
-//
-// Extract file data from text file and load into an array for processing of the format rules
-//
+//========================================================
+// Extract file data from text file and load into an array
+//========================================================
 function readData(fileUpload, cellDelimiter, objRules, callback) {
   //
   // Extract data from selected file
@@ -154,11 +155,10 @@ function readData(fileUpload, cellDelimiter, objRules, callback) {
   else {
       alert("Please upload a valid CSV file.");
   }
-
 }
-//
+//=================================================
 // Create table to display list content in DOM
-//
+//=================================================
 function displayData(listContent, listPrompt, objRules) {
   var rowCount = listContent.length;
   var dataColCount = listContent[0].length;
@@ -241,20 +241,30 @@ function displayData(listContent, listPrompt, objRules) {
   }
   console.log("<<< Data list display updated >>>");
 }
-//
-// Execute commit request and store file data
-//
-
-//build this as a json string array
-// header1: file information - providerCode, dataType, filename, period - null if dataType = IM, year - null if dataType = IM, timestamp, userId, recordCount
-// header2: provider code from header 1, period from header1 for commission data and from TRX data for IM data, policyNumber from TRX data
-//
-// for every row
-//   read column def and the data in array for every column
-//
-// add period to every comm trx??????
-
+//================================================
+// Send loaded file data to server
+//================================================
 function commitFileData() {
+  //
+  // Send file register document to the server.
+  // Server will create the file register document and save the
+  // recon data with a reference to file register entry.
+  //
+  extractFileData((dataPayload) => {
+    var method = "POST";
+    var route = "/saveFileData";
+    serverRequest(method, route, dataPayload, (resp) => {
+      // if (!resp == 200) {
+      //   alert("Data send failed.");
+      // }
+      console.log("---> Commit file data result: ", resp);
+    });
+  });
+}
+//=============================================
+// Extract file data from DOM
+//=============================================
+function extractFileData(callback) {
   //
   // determine file type
   //
@@ -280,7 +290,6 @@ function commitFileData() {
   var objRules = readRules(dataSource);
   console.log("File def:", objRules);
   var timestamp = new Date().getTime();
-
   //
   // Get DOM data
   //
@@ -294,20 +303,8 @@ function commitFileData() {
   var cellCount = trxTable.rows[0].cells.length;
   console.log("Data List Table cells:", cellCount);
   //
-  // Extract file register data and convert to a JSON string
+  // Create file register document as an object
   //
-  var fileRegData = '{ "providerCode" : "' + input[0].value + '", ' +
-                      '"dataType" : "' + dataType + '", ' +
-                      '"filename" : "' + filename + '", ' +
-                      '"period" : "' + input[1].value + '", ' +
-                      '"year" : "' + input[2].value + '", ' +
-                      '"timestamp" : "' + timestamp + '", ' +
-                      '"recordCount" : "' + rowCount + '" }';
-  console.log("=> File Register JSON:", fileRegData);
-  var obj = JSON.parse(fileRegData); // convert JSON text into JS object
-  console.log("=> File Register Obj: ", obj);
-
-  // define file register object
   var fileRegData = {
     providerCode : input[0].value,
     dataType : dataType,
@@ -317,27 +314,11 @@ function commitFileData() {
     timestamp : timestamp,
     recordCount : rowCount
   };
-  // convert to JSON string
+  //
+  // convert file register document to a JSON string
+  //
   var fileRegJson = JSON.stringify(fileRegData);
-  console.log("===> File Register JSON: ", fileRegJson);
-
-  //==================================================
-  var key1 = "source";
-  var key2 = "rem_per";
-  var key3 = "rem_year";
-
-  // create send data string
-  var fileRegObj = {};
-    fileRegObj[key1] = input[0].value;
-    fileRegObj[key2] = input[1].value;
-    fileRegObj[key3] = input[2].value;
-
-  console.log("==> File Register Obj:", fileRegObj);
-
-  var fileRegJson = JSON.stringify(fileRegObj);
-  console.log("==> File Register JSON: ", fileRegJson);
-  //==================================================
-
+  // console.log("===> File Register JSON: ", fileRegJson);
   //
   // Extract transaction data from DOM table and convert to a JSON string
   //
@@ -358,142 +339,53 @@ function commitFileData() {
     //console.log(">>> tmp data ", tmpTrxData);
     objTrxData.data.push(tmpTrxData);
   }
-  console.log("===> Data obj:", objTrxData);
+  // console.log("===> Data obj:", objTrxData);
   var jsonTrxData = JSON.stringify(objTrxData.data);
-  console.log("===> JSON Data: ", jsonTrxData);
-
-  var dataSub = {
+  // console.log("===> JSON Data: ", jsonTrxData);
+  //
+  // Create server message data string
+  //
+  var dataExtract = {
     file : fileRegData,
     transactions : objTrxData
   };
-  var jsonSubData = JSON.stringify(dataSub);
-  console.log("===> JSON Data: ", jsonSubData);
+  var dataContent = JSON.stringify(dataExtract);
+  console.log("===> JSON Data: ", dataContent);
+  return callback(dataContent);
 }
-
-function commitFileDatazzz() {
-    //
-    // Send file register data and commission data to server
-    // Server will create the file register entry and save the
-    // commission data
-    //
-    // Get the file register input parameters from DOM input
-    //
-    var input = document.getElementsByName("fileRegData");
-    console.log("File Register:", input);
-    console.log("Input data:", input[0].value, input[1].value, input[2].value);
-    // create send data string
-    var fileRegData = "source=" + input[0].value +
-                        "&rem_per=" + input[1].value +
-                        "&rem_year=" + input[2].value;
-    console.log("File Register:", fileRegData);
-    //
-    // Set up connection to server
-    //
-    var xhttp;
-    if (window.XMLHttpRequest) {
-        xhttp = new XMLHttpRequest();
+//================================================
+// Send request to server
+//================================================
+function serverRequest(method, route, payload, callback) {
+  //
+  // Set up connection to server
+  //
+  var xhttp;
+  if (window.XMLHttpRequest) {
+    xhttp = new XMLHttpRequest();
+  }
+  else {
+    // code for IE6, IE5
+    xhttp = new ActiveXObject("Microsoft.XMLHTTP");
+  }
+  //
+  // Monitor request state changes reported by server
+  //
+  xhttp.onreadystatechange = function() {
+    console.log("Ready state:", xhttp.readyState);
+    if (xhttp.readyState == 4 && xhttp.status == 200) {
+      //
+      // Request complete and successful response from server
+      //
+      var response = xhttp.status;
+      console.log("response:", response);
+      callback(response);
     }
-    else {
-        // code for IE6, IE5
-        xhttp = new ActiveXObject("Microsoft.XMLHTTP");
-    }
-    //
-    // Monitor request state changes reported by server
-    //
-    xhttp.onreadystatechange = function() {
-        console.log("Ready state:", xhttp.readyState);
-        if (xhttp.readyState == 4 && xhttp.status == 200) {
-            //
-            // Request complete and successful response from server, start stage two
-            //
-            var response = xhttp.responseText;
-            console.log("response:", response);
-            var respJ = JSON.parse(response.substring(0, response.indexOf("|")));
-            console.log("JSON part of response", respJ);
-            var respH = response.substring(response.indexOf("|")+1, response.length);
-            console.log("HTML part of response", respH);
-
-            // var response = JSON.parse(xhttp.responseText);
-            // var response = JSON.parse(response);
-            console.log("send:", response);
-            // The response can be either -
-            //      "stage":"two", "info":"record index" or
-            //      "stage":"done", "info":"file register table content in HTML"
-            //
-            if (respJ.stage == 'two') {
-                //
-                // Stage one, create file register entry, is complete.
-                // Start stage two to save the file data.
-                //
-                var objTrxData = {
-                    'data': []
-                };
-                var objRules = readRules();
-                var trxTable = document.getElementById("dataList");
-                console.log("Data List Table:", trxTable);
-                var rowCount = trxTable.rows.length;
-                //
-                // extract transaction rows from table ignoring the header row
-                //
-                for (var r = 1, n = trxTable.rows.length; r < n; r++) {
-                    //
-                    // Fill object data array with extracted data rows
-                    //
-                  objTrxData.data[r-1] = ({
-                        file_id: respJ.info,
-                        trx_type: 'F',
-                        insurance_co_code: trxTable.rows[r].cells[0].innerHTML,
-                        marketers_code: trxTable.rows[r].cells[1].innerHTML,
-                        source_code: trxTable.rows[r].cells[2].innerHTML,
-                        policy_no: trxTable.rows[r].cells[3].innerHTML,
-                        policy_holder: trxTable.rows[r].cells[4].innerHTML,
-                        initials: trxTable.rows[r].cells[5].innerHTML,
-                        commission_type: trxTable.rows[r].cells[6].innerHTML,
-                        commission_amount: trxTable.rows[r].cells[7].innerHTML,
-                        vat_amount: trxTable.rows[r].cells[8].innerHTML,
-                        broker_fee_amount: trxTable.rows[r].cells[9].innerHTML,
-                        month_commission_amount: trxTable.rows[r].cells[10].innerHTML,
-                        revised_policy_no: trxTable.rows[r].cells[11].innerHTML,
-                        premium_amount: trxTable.rows[r].cells[12].innerHTML,
-                        line_of_business: trxTable.rows[r].cells[13].innerHTML,
-                        branch_agent: trxTable.rows[r].cells[14].innerHTML,
-                        period: trxTable.rows[r].cells[15].innerHTML,
-                        marketers_code_2: trxTable.rows[r].cells[16].innerHTML,
-                        marketers_code_3: trxTable.rows[r].cells[17].innerHTML,
-                        marketers_code_4: trxTable.rows[r].cells[18].innerHTML
-                    });
-                }
-                // console.log("<<< TRX Data Obj >>> ", objTrxData);
-                //
-                // Now stringify data obj into JSON string for data transfer
-                //
-                var jTrxData = JSON.stringify(objTrxData);
-                // console.log("TRX JSON Data:", jTrxData);
-                //
-                // Send file data to server
-                //
-                xhttp.open("POST", "/postTrxData");
-                // xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                // xhttp.setRequestHeader("Content-type", "text/html");
-                xhttp.setRequestHeader("Content-type", "application/json");
-                xhttp.send(jTrxData);
-            }
-            else { // response.stage == 'done')
-                //
-                // Stage two, file data saved and data validation is complete.
-                // Stage three is to update file register table display.
-                //
-                document.getElementById("fileReg").innerHTML = respH;
-            }
-        }
-    }
-    //
-    // First stage: send file register data to create File Register entry
-    //
-    xhttp.open("POST", "/postFileReg");
-    // xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.setRequestHeader("Content-type", "text/html");
-    xhttp.send(fileRegData);
+  }
+  xhttp.open(method, route);
+  // xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xhttp.setRequestHeader("Content-type", "text/html");
+  xhttp.send(payload);
 }
 //
 // Function that return the data definitions as an object

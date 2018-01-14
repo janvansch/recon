@@ -12,10 +12,11 @@
     * Code location: c:OneDrive\Projects\public\index.html      *
     *************************************************************
   -->
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Home | Recon</title>
-
-  <meta charset="utf-8">
 
   <meta name="keywords" content="Utility App" />
   <meta name="description" content="Recon MI data with source" />
@@ -25,12 +26,10 @@
   <meta name="website" content="www.nimbledesign.co.za" />
 
   <!-- Link Style Sheets -->
-	 <link rel="stylesheet" href="css/style.css">
+	<link rel="stylesheet" href="css/style.css">
   <!--
   <link rel="stylesheet" href="responsive.css">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   -->
-  <!-- link script files -->
 </head>
 
 <!--<body onload="setup()"> -->
@@ -119,46 +118,52 @@
   File Source:
   <input list="providers"  placeholder="File Provider" name="fileRegData" size="20">
       <datalist id="providers">
-        <option value="AMU">
-        <option value="CSU">
-        <option value="ECH">
-        <option value="MIR">
-        <option value="SHA">
-        <option value="VUM">
+          <option value="SANTAM">
+          <option value="AUTO &amp; GENERAL">
+          <option value="MUTUAL &amp; FEDERAL">
+          <option value="ECHELON">
+          <option value="REFERRALS">
+          <option value="GLACIER">
+          <option value="C SURE">
+          <option value="LANDMARK">
+          <option value="SHA">
+          <option value="MERX">
+          <option value="MIRABILIS">
+          <option value="ALEX FORBES">
+          <option value="ZURICH">
+          <option value="GUARD RISK">
       </datalist>
 
   <input list="periods" placeholder="Period" name="fileRegData" size="6">
       <datalist id="periods">
-        <option value="01">
-        <option value="02">
-        <option value="03">
-        <option value="04">
-        <option value="05">
-        <option value="06">
-        <option value="07">
-        <option value="08">
-        <option value="09">
-        <option value="10">
-        <option value="11">
-        <option value="12">
+         <option value="01">
+         <option value="02">
+         <option value="03">
+         <option value="04">
+         <option value="05">
+         <option value="06">
+         <option value="07">
+         <option value="08">
+         <option value="09">
+         <option value="10">
+         <option value="11">
+         <option value="12">
       </datalist>
 
   <input list="years" placeholder="Year" name="fileRegData" size="6">
       <datalist id="years">
-        <option value="2011">
-        <option value="2012">
-        <option value="2013">
-        <option value="2014">
-        <option value="2015">
-        <option value="2016">
-        <option value="2017">
-        <option value="2018">
-        <option value="2019">
-        <option value="2020">
-        <option value="2021">
-        <option value="2022">
-        <option value="2023">
-        <option value="2024">
+         <option value="2011">
+         <option value="2012">
+         <option value="2013">
+         <option value="2014">
+         <option value="2015">
+         <option value="2016">
+         <option value="2017">
+         <option value="2018">
+         <option value="2019">
+         <option value="2020">
+         <option value="2021">
+         <option value="2022">
        </datalist>
 
   <input type="button" id="dataCommit" value="Commit File Data" onclick = "commitFileData()">
@@ -173,7 +178,8 @@
 
 	<noscript>Sorry, your browser does not support JavaScript!</noscript>
 
-<script type="text/javascript" src="js/script.js"></script>
+<script src="/js/libs/ejs.min.js"></script>
+<script type="text/javascript" src="/js/script.js"></script>
 
 </body>
 
