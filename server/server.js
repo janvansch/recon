@@ -78,21 +78,29 @@ app.get('/bad', (req, res) => {
 app.get('/', (req, res) => {
   // res.render('index.html');
   res.render('index');
-  //   res.render('index.html', {
-  //  pageTitle: 'Login Page',
-  //  welcomeMessage: 'Welcome to my website'
-  //});
 });
 
 app.post('/saveFileData', (req, res) => {
-  // console.log("File Data: ", req);
-  res.send('ok');
+  // console.log("===> File Data: ", req);
+  var fileData = req.body;
+  console.log("===> File Data Body: ", fileData);
+
+  // var regData = req.body.reg;
+  // console.log("===> Register data: ", regData);
+  // var trxData = req.body.trx.data;
+  // console.log("===> Recon data: ", trxData);
+
+  var result = saveFileData(fileData);
+  console.log("===> File data save requested: ", result);
+
+  res.send(result);
   // saveFileData(req, () => {
   //   res.send('ok');
   // }, (e) => {
   //   console.log("---> Error Data: ", e);
   //   res.status(400).send(e);
   // });
+
   // var todo = new Todo({
   //   text: req.body.text,
   //   _creator: req.user._id

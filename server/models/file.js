@@ -1,7 +1,9 @@
 var mongoose = require('mongoose');
 
-var reconData = mongoose.model('loadFile', {
-
+var fileSchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId
+  },
   providerCode: {
     type: String,
     required: true,
@@ -31,15 +33,17 @@ var reconData = mongoose.model('loadFile', {
     required: true,
     trim: true
   },
+  docCount: {
+    type: Number,
+    required: true
+  },
   userId: {
     type: String,
     required: true,
     trim: true
-  },
-  recordCount: {
-    type: Number,
-    required: true
   }
 });
 
-module.exports = {loadFile};
+var File = mongoose.model('file', fileSchema);
+
+module.exports = {File};

@@ -4,18 +4,15 @@ var reconSchema = new mongoose.Schema({
 // var reconData = mongoose.model('reconData', {
   providerCode: {
     type: String,
-    required: true,
     minlength: 3,
     trim: true
   },
-  period: {
-    type: Number,
-    required: true
+  finPeriod: {
+    type: Number
   },
   policyNumber: {
     type: String,
-    Required: true,
-    minlength: 1
+    minlength: 1,
     trim: true
   },
   comments: [{
@@ -25,252 +22,199 @@ var reconSchema = new mongoose.Schema({
     },
     timestamp: {
       type: String,
-      required: true,
       trim: true
     },
     userId: {
       type: String,
-      required: true,
       trim: true
     }
   }],
   comData: {
     aggrCommAmount: {
-      type: Number,
-      required: true
+      type: Number
     },
     aggrVatAmount: {
-      type: Number,
-      required: true
+      type: Number
     },
     aggrBrokerFeeAmount: {
-      type: Number,
-      required: true
+      type: Number
     },
     aggrMonthCommissionAmount: {
-      type: Number,
-      required: true
+      type: Number
     },
     aggrPremium_amount: {
-      type: Number,
-      required: true
+      type: Number
     },
-    comTransactions: {[
+    comTransactions: [{
       productProviderCode: {
-        type: Number,
-        required: true
+        type: Number
       },
       marketersCode: {
-        type: Number,
-        required: true
+        type: Number
       },
-      agtCode: {
-        type: Number,
-        required: true
+      sourceCode: {
+        type: Number
       },
       policyNumber: {
         type: String,
-        required: true,
         trim: true
       },
       policyHolder: {
         type: String,
-        required: true,
         trim: true
       },
       initials: {
         type: String,
         trim: true
       },
-      commType: {
-        type: Number,
-        required: true
+      commissionType: {
+        type: Number
       },
       commissionAmount: {
-        type: Number,
-        required: true
+        type: Number
       },
       vatAmount: {
-        type: Number,
-        required: true
+        type: Number
       },
       brokerFeeAmount: {
-        type: Number,
-        required: true
+        type: Number
       },
       monthCommissionAmount: {
-        type: Number,
-        required: true
+        type: Number
       },
-      revised_policy_no: {
+      revisedPolicyNumber: {
         type: String,
-        required: true,
         trim: true
       },
-      premium_amount: {
-        type: Number,
-        required: true
+      premiumAmount: {
+        type: Number
       },
       lineOfBusiness: {
-        type: Number,
-        required: true
+        type: Number
       },
       branchAgentCode: {
         type: String,
-        required: true,
         trim: true
       },
       period: {
-        type: Number,
-        required: true
+        type: Number
       },
       firstReferrer: {
         type: String,
-        required: true,
         minlength: 3,
         trim: true
       },
       secondReferrer: {
         type: String,
-        required: true,
         minlength: 3,
         trim: true
       },
       thirdReferrer: {
         type: String,
-        required: true,
         minlength: 3,
         trim: true
-      }]
+      },
       loadFile_id: {
-        type: ObjectId,
-        required: true
+        type: String
       }
-    },
+    }]
   },
   imData: {
     aggrGrossWrittenPremium: {
-      type: Number,
-      required: true
+      type: Number
     },
     aggrGrossEarnedPremium: {
-      type: Number,
-      required: true
+      type: Number
     },
     aggrGrossWtittenCommission: {
-      type: Number,
-      required: true
+      type: Number
     },
     aggrGrossEarnedCommission: {
-      type: Number,
-      required: true
+      type: Number
     },
     aggrNetWrittenPremium: {
-      type: Number,
-      required: true
+      type: Number
     },
     aggrNetEarnedPremium: {
-      type: Number,
-      required: true
+      type: Number
     },
     aggrNetWrittenCommission: {
-      type: Number,
-      required: true
+      type: Number
     },
     aggrNetEarnedCommission: {
-      type: Number,
-      required: true
+      type: Number
     },
     imTransactions : [{
       fiscalPeriod: {
-        type: Number,
-        required: true
+        type: Number
       },
       providerCode: {
         type: String,
-        required: true,
         minlength: 3,
         trim: true
       },
       providerBrokerCode: {
-        type: Number,
-        required: true
+        type: Number
       },
       stiProviderBrokerCode: {
         type: String,
-        required: true,
         minlength: 1,
         trim: true
       },
       policyNumber: {
         type: String,
-        required: true,
         trim: true
       },
       stiPolicy: {
         type: String,
-        required: true,
         minlength: 1,
         trim: true
       },
       productGroup: {
         type: String,
-        required: true,
         trim: true
       },
       productSummary: {
         type: String,
-        required: true,
         trim: true
       },
       contractPeriodFrom: {
         type: Date,
-        required: true,
       },
       contractPeriodTo: {
         type: Date,
-        required: true,
       },
       grossWrittenPremium: {
-        type: Number,
-        required: true
+        type: Number
       },
       grossEarnedPremium: {
-        type: Number,
-        required: true
+        type: Number
       },
       grossWtittenCommission: {
-        type: Number,
-        required: true
+        type: Number
       },
       grossEarnedCommission: {
-        type: Number,
-        required: true
+        type: Number
       },
       netWrittenPremium: {
-        type: Number,
-        required: true
+        type: Number
       },
       netEarnedPremium: {
-        type: Number,
-        required: true
+        type: Number
       },
       netWrittenCommission: {
-        type: Number,
-        required: true
+        type: Number
       },
       netEarnedCommission: {
-        type: Number,
-        required: true
+        type: Number
       },
       loadFile_id: {
-        type: ObjectId,
-        required: true
+        type: String
       }
     }]
   }
 });
 
-var recon = mongoose.model('recon', reconSchema);
+var Recon = mongoose.model('recon', reconSchema);
 
-module.exports = {recon};
+module.exports = {Recon};

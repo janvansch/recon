@@ -241,26 +241,6 @@ function displayData(listContent, listPrompt, objRules) {
   }
   console.log("<<< Data list display updated >>>");
 }
-//================================================
-// Send loaded file data to server
-//================================================
-function commitFileData() {
-  //
-  // Send file register document to the server.
-  // Server will create the file register document and save the
-  // recon data with a reference to file register entry.
-  //
-  extractFileData((dataPayload) => {
-    var method = "POST";
-    var route = "/saveFileData";
-    serverRequest(method, route, dataPayload, (resp) => {
-      // if (!resp == 200) {
-      //   alert("Data send failed.");
-      // }
-      console.log("---> Commit file data result: ", resp);
-    });
-  });
-}
 //=============================================
 // Extract file data from DOM
 //=============================================
@@ -308,21 +288,17 @@ function extractFileData(callback) {
   var fileRegData = {
     providerCode : input[0].value,
     dataType : dataType,
-    filename : filename,
+    filename : filename.value,
     period : input[1].value,
     year : input[2].value,
     timestamp : timestamp,
-    recordCount : rowCount
+    docCount : rowCount
+    // userId : userId - added on server
   };
-  //
-  // convert file register document to a JSON string
-  //
-  var fileRegJson = JSON.stringify(fileRegData);
-  // console.log("===> File Register JSON: ", fileRegJson);
   //
   // Extract transaction data from DOM table and convert to a JSON string
   //
-  var objTrxData = {
+  var fileTrxData = {
       'data': []
   };
   for (var row = 1, r = rowCount; row < r; row++) { // Ignore header row
@@ -337,26 +313,24 @@ function extractFileData(callback) {
       tmpTrxData[key] = data;
     }
     //console.log(">>> tmp data ", tmpTrxData);
-    objTrxData.data.push(tmpTrxData);
+    fileTrxData.data.push(tmpTrxData);
   }
-  // console.log("===> Data obj:", objTrxData);
-  var jsonTrxData = JSON.stringify(objTrxData.data);
-  // console.log("===> JSON Data: ", jsonTrxData);
   //
   // Create server message data string
   //
-  var dataExtract = {
-    file : fileRegData,
-    transactions : objTrxData
+  var fileDataExtract = {
+    reg : fileRegData,
+    trx : fileTrxData
   };
-  var dataContent = JSON.stringify(dataExtract);
-  console.log("===> JSON Data: ", dataContent);
-  return callback(dataContent);
+  var fileData = JSON.stringify(fileDataExtract);
+  // console.log("===> JSON Data: ", fileData);
+  callback(fileData);
 }
 //================================================
-// Send request to server
+// Send save request to server
 //================================================
 function serverRequest(method, route, payload, callback) {
+  console.log("===> File data payload : ", payload);
   //
   // Set up connection to server
   //
@@ -384,8 +358,29 @@ function serverRequest(method, route, payload, callback) {
   }
   xhttp.open(method, route);
   // xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-  xhttp.setRequestHeader("Content-type", "text/html");
+  // xhttp.setRequestHeader("Content-type", "text/html");
+  xhttp.setRequestHeader("Content-type", "application/json");
   xhttp.send(payload);
+}
+//================================================
+// Send loaded file data to server
+//================================================
+function commitFileData() {
+  //
+  // Send file register document to the server.
+  // Server will create the file register document and save the
+  // recon data with a reference to file register entry.
+  //
+  extractFileData((fileData) => {
+    var method = "POST";
+    var route = "/saveFileData";
+    serverRequest(method, route, fileData, (resp) => {
+      // if (!resp == 200) {
+      //   alert("Data send failed.");
+      // }
+      console.log("---> Commit file data result: ", resp);
+    });
+  });
 }
 //
 // Function that return the data definitions as an object

@@ -4,3 +4,4 @@ documentation/
 sandbox/
 /*.bat
 package-lock.json
+server.log
