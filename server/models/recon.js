@@ -42,7 +42,7 @@ var reconSchema = new mongoose.Schema({
     aggrMonthCommissionAmount: {
       type: Number
     },
-    aggrPremium_amount: {
+    aggrPremiumAmount: {
       type: Number
     },
     comTransactions: [{

@@ -405,7 +405,7 @@ function readRules(dataSource) {
       '{ "fname" : "premiumAmount" , "label" : "Premium Amount" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
       '{ "fname" : "lineOfBusiness" , "label" : "Policy Type" , "datatype" : "number" , "size" : "1" , "required" : "false" },' +
       '{ "fname" : "branchAgentCode" , "label" : "Branch Agent Code" , "datatype" : "string" , "size" : "7" , "required" : "true" },' +
-      '{ "fname" : "period" , "label" : "Commission Period" , "datatype" : "number" , "size" : "6" , "required" : "false" },' +
+      '{ "fname" : "fiscalPeriod" , "label" : "Fiscal Period" , "datatype" : "number" , "size" : "6" , "required" : "false" },' +
       '{ "fname" : "firstReferrer" , "label" : "1st Referrer" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
       '{ "fname" : "secondReferrer" , "label" : "2nd Referrer" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
       '{ "fname" : "thirdReferrer" , "label" : "3rd Referrer" , "datatype" : "string" , "size" : "8" , "required" : "false" } ]}'
@@ -413,25 +413,25 @@ function readRules(dataSource) {
   }
   else {
     var jText = '{ "filedef" : [' +
-      '{ "fname":"fiscal_period" , "label":"Period" , "datatype":"string" , "size":"3" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
-      '{ "fname":"provider_code" , "label":"Provider Code" , "datatype":"string" , "size":"8" , "used":"false" , "edit":"true" , "blank":"true" , "ref":"false" },' +
-      '{ "fname":"provider_broker_code" , "label":"Provider Broker Code" , "datatype":"string" , "size":"20" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
-      '{ "fname":"sti_pbc" , "label":"STI PBC" , "datatype":"string" , "size":"15" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
-      '{ "fname":"policy_number" , "label":"Policy Number" , "datatype":"string" , "size":"50" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fname":"sti_pol" , "label":"STI POL" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fname":"product_group" , "label":"Product Group" , "datatype":"string" , "size":"2" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fname":"product_summary" , "label":"Product Summary" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
-      '{ "fname":"contract_period_from" , "label":"Contract Period From" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fname":"contract_period_to" , "label":"Contract Period To" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fname":"gross_written_prem" , "label":"Gross Written Premium" , "datatype":"number" , "size":"12" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fname":"gross_earned_prem" , "label":"Gross Earned Premium" , "datatype":"string" , "size":"15" , "used":"false" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fname":"gross_written_comm" , "label":"Gross Written Commission" , "datatype":"number" , "size":"12" , "used":"true" , "edit":"false" , "blank":"true" , "ref":"false" },' +
-      '{ "fname":"gross_earned_comm" , "label":"Gross Earned Commission" , "datatype":"number" , "size":"1" , "used":"true" , "edit":"false" , "ref":"true" },' +
-      '{ "fname":"net_written_prem" , "label":"Net Written Premium" , "datatype":"string" , "size":"7" , "used":"true" , "edit":"true" , "blank":"false" , "ref":"true" },' +
-      '{ "fname":"net_earned_prem" , "label":"Net Earned Premium" , "datatype":"string" , "size":"6" , "used":"true" , "edit":"false" , "blank":"false" , "ref":"false" },' +
-      '{ "fname":"net_written_comm" , "label":"Net Written Comm" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
-      '{ "fname":"net_earned_comm" , "label":"Net Earned Commission" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" },' +
-      '{ "fname":"in_place_file" , "label":"In Place File" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" } ]}'
+      '{ "fname" : "fiscalPeriod" , "label" : "Fiscal Period" , "datatype" : "string" , "size" : "3" , "required" : "false" },' +
+      '{ "fname" : "providerCode" , "label" : "Provider Code" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
+      '{ "fname" : "providerBrokerCode" , "label" : "Provider Broker Code" , "datatype" : "string" , "size" : "20" , "required" : "false" },' +
+      '{ "fname" : "stiProviderBrokerCode" , "label" : "STI PBC" , "datatype" : "string" , "size" : "15" , "required" : "false" },' +
+      '{ "fname" : "policyNumber" , "label" : "Policy Number" , "datatype" : "string" , "size" : "50" , "required" : "false" },' +
+      '{ "fname" : "stiPolicy" , "label" : "STI POL" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
+      '{ "fname" : "productGroup" , "label" : "Product Group" , "datatype" : "string" , "size" : "2" , "required" : "false" },' +
+      '{ "fname" : "productSummary" , "label" : "Product Summary" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
+      '{ "fname" : "contractPeriodFrom" , "label" : "Contract Period From" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
+      '{ "fname" : "contractPeriodTo" , "label" : "Contract Period To" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
+      '{ "fname" : "grossWrittenPremium" , "label" : "Gross Written Premium" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
+      '{ "fname" : "grossEarnedPremium" , "label" : "Gross Earned Premium" , "datatype" : "string" , "size" : "15" , "required" : "false" },' +
+      '{ "fname" : "grossWrittenCommission" , "label" : "Gross Written Commission" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
+      '{ "fname" : "grossEarnedCommission" , "label" : "Gross Earned Commission" , "datatype" : "number" , "size" : "1" , "required" : "false" },' +
+      '{ "fname" : "netWrittenPremium" , "label" : "Net Written Premium" , "datatype" : "string" , "size" : "7" , "required" : "false" },' +
+      '{ "fname" : "netEarnedPremium" , "label" : "Net Earned Premium" , "datatype" : "string" , "size" : "6" , "required" : "false" },' +
+      '{ "fname" : "netWrittenCommission" , "label" : "Net Written Comm" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
+      '{ "fname" : "netEarnedCommission" , "label" : "Net Earned Commission" , "datatype" : "string" , "size" : "8" , "required" : "false" } ]}' //},' +
+      /*'{ "fname":"in_place_file" , "label":"In Place File" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" } ]}' */
     ;
   }
   var obj = JSON.parse(jText); // convert JSON text into JS object

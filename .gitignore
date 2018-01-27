@@ -3,5 +3,6 @@ server/config/config.json
 documentation/
 sandbox/
 /*.bat
+*_bak*.*
 package-lock.json
-server.log
+*.log

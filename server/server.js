@@ -1,4 +1,4 @@
-"use strict";
+"use strict"
 //=============================================
 require('./config/config');
 //=============================================
@@ -15,7 +15,7 @@ var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 var {authenticate} = require('./middleware/authenticate');
-var {saveFileData} = require('./middleware/saveFileData');
+var {processFileData} = require('./middleware/processFileData');
 
 const port = process.env.PORT;
 const publicPath = path.join(__dirname, '../public');
@@ -28,7 +28,9 @@ console.log("===> Public Path: ", publicPath);
 app.use(express.static(publicPath));
 // app.use(express.static(publicPath));
 //app.use(express.static(__dirname + 'public'));
+
 app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser({limit: '50mb'}));
 app.use(bodyParser.json());
 
 //=============================================
@@ -83,33 +85,33 @@ app.get('/', (req, res) => {
 app.post('/saveFileData', (req, res) => {
   // console.log("===> File Data: ", req);
   var fileData = req.body;
-  console.log("===> File Data Body: ", fileData);
+  //console.log("===> File Data Body: ", fileData);
 
   // var regData = req.body.reg;
   // console.log("===> Register data: ", regData);
   // var trxData = req.body.trx.data;
   // console.log("===> Recon data: ", trxData);
 
-  var result = saveFileData(fileData);
-  console.log("===> File data save requested: ", result);
+  // Process file data
+  var result = processFileData(fileData, (err, result) => {
+    console.log("===> File data save result: ", err, result);
+    if (!err) {
+      aggregateFileData(fileData, (err, result) => {
+        console.log("===> File data aggregation result: ", err, result);
+        if (err) {
+          result = "400";
+        }
+      });
+    }
+    else if(err) {
+      result = "400";
+    }
+    console.log("===> File data processing result", result);
+    return result;
+  });
 
   res.send(result);
-  // saveFileData(req, () => {
-  //   res.send('ok');
-  // }, (e) => {
-  //   console.log("---> Error Data: ", e);
-  //   res.status(400).send(e);
-  // });
 
-  // var todo = new Todo({
-  //   text: req.body.text,
-  //   _creator: req.user._id
-  // });
-  // todo.save().then((doc) => {
-  //   res.send(doc);
-  // }, (e) => {
-  //   res.status(400).send(e);
-  // });
 });
 
 app.post('/todos', authenticate, (req, res) => {
