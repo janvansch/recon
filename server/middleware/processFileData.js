@@ -74,7 +74,7 @@ function processTrx (dataType, providerCode, finPeriod, policyNumber, trxEntry, 
 }
 
 // save data loaded
-var processFileData = (fileData) => {
+var processFileData = (fileData, callback) => {
   // var fileDataObj = JSON.parse(fileData); // convert JSON text into JS object
   var regData = fileData.reg;
   var trxData = fileData.trx.data; // an array of transactions
@@ -104,7 +104,8 @@ var processFileData = (fileData) => {
 
   // Save File Register Entry
   regEntry.save().catch((e) => {
-    return res = "400";
+    res = "400";
+    callback(res);
   });
 
   // Process file data
@@ -120,7 +121,8 @@ var processFileData = (fileData) => {
       if (!success) {
         // console.log("---> Trx process failed", trxEntry);
         console.log("---> Trx process failed", dataType, providerCode, finPeriod, policyNumber);
-        return res = "400";
+        res = "400";
+        callback(res);
       }
       console.log("---> Trx processed");
 
@@ -131,7 +133,7 @@ var processFileData = (fileData) => {
   //
   // calculate a control total of transactions value and write to the files doc.
   //
-  return res;
+  callback(res);
 } // end of saveFileData function
 
 module.exports = {processFileData};

@@ -16,6 +16,7 @@ var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 var {authenticate} = require('./middleware/authenticate');
 var {processFileData} = require('./middleware/processFileData');
+var {aggregateFileData} = require('./middleware/aggregateFileData');
 
 const port = process.env.PORT;
 const publicPath = path.join(__dirname, '../public');
@@ -93,21 +94,21 @@ app.post('/saveFileData', (req, res) => {
   // console.log("===> Recon data: ", trxData);
 
   // Process file data
-  var result = processFileData(fileData, (err, result) => {
-    console.log("===> File data save result: ", err, result);
-    if (!err) {
+  processFileData(fileData, (result) => {
+    console.log(">>>> File data processing result: ", result);
+    if (result = "200") {
       aggregateFileData(fileData, (err, result) => {
-        console.log("===> File data aggregation result: ", err, result);
+        console.log(">>>> File data aggregation result: ", err, result);
         if (err) {
           result = "400";
         }
       });
     }
-    else if(err) {
+    else if(result = "400") {
       result = "400";
     }
-    console.log("===> File data processing result", result);
-    return result;
+    console.log(">>>> File data processing result", result);
+
   });
 
   res.send(result);

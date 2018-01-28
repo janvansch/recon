@@ -3,49 +3,64 @@ const {ObjectID} = require('mongodb');
 const {Recon} = require('../models/recon');
 
 // aggregate/reaggregate transaction data for recon docs updated.
-function aggregateComTrx(providerCode, finPeriod, policyNumber}) {
-  db.recons.aggregate(
-    [
-      {
-        $match: {
-          $and: [
-            {'$comData.providerCode': providerCode},
-            {'$comData.finPeriod': finPeriod},
-            {'$comData.policyNumber': policyNumber}
-          ]
-        }
+function aggregateComTrx(providerCode, finPeriod, policyNumber, callback) {
+  console.log("Aggregate match key: ", providerCode, finPeriod, policyNumber);
+  Recon.aggregate([
+    {
+      "$match": {
+        "$and": [
+          {"providerCode": "providerCode"},
+          {"finPeriod": "finPeriod"},
+          {"policyNumber": "policyNumber"}
+        ]
       }
-      {
-        $group: {
-          _id: { '$comData.providerCode': providerCode,'$comData.finPeriod': finPeriod, '$comData.policyNumber': policyNumber },
-          aggrCommAmount: {$sum: "$comData.comTransactions.commissionAmount"},
-          aggrVatAmount: {$sum: "$comData.comTransactions.vatAmount"},
-          aggrBrokerFeeAmount: {$sum: "$comData.comTransactions.brokerFeeAmount"},
-          aggrMonthCommissionAmount: {$sum: "$comData.comTransactions.monthCommissionAmount"},
-          aggrPremiumAmount: {$sum: "$comData.comTransactions.premiumAmount"}
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          aggrCommAmount: 1,
-          aggrVatAmount: 1,
-          aggrBrokerFeeAmount: 1,
-          aggrMonthCommissionAmount: 1,
-          aggrPremiumAmount: 1
-        }
-      },
-      { $out: "recon" }
-    ],
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "commissionAmount": "$comData.comTransactions.commissionAmount",
+        "vatAmount": "$comData.comTransactions.vatAmount",
+        "brokerFeeAmount": "$comData.comTransactions.brokerFeeAmount",
+        "monthCommissionAmount": "$comData.comTransactions.monthCommissionAmount",
+        "premiumAmount": "$comData.comTransactions.premiumAmount"
+      }
+    },
+    {
+      "$group": {
+        "_id": {
+          "providerCode": "$providerCode",
+          "finPeriod": "$finPeriod",
+          "policyNumber": "$policyNumber"
+        },
+        "aggrCommAmount": {"$sum": "$commissionAmount"},
+        "aggrVatAmount": {"$sum": "$vatAmount"},
+        "aggrBrokerFeeAmount": {"$sum": "$brokerFeeAmount"},
+        "aggrMonthCommissionAmount": {"$sum": "$monthCommissionAmount"},
+        "aggrPremiumAmount": {"$sum": "$premiumAmount"},
+        "trxCount": {"$sum": 1}
+      }
+    },
+    {
+      "$project": {
+        "_id": 0,
+        "aggrCommAmount": 1,
+        "aggrVatAmount": 1,
+        "aggrBrokerFeeAmount": 1,
+        "aggrMonthCommissionAmount": 1,
+        "aggrPremiumAmount": 1,
+        "trxCount": 1
+      }
+    }
+  ],
     function (err, result) {
         if (err) {
-            console.log(err);
-            return;
+            console.log("===> Aggregation error: ", err);
+            callback(err, result);
         }
-        console.log(result);
-    };
+        console.log("===> Aggregation function result: ", result);
+        callback(err, result);
+    }
   );
-  callback(err, result);
 }
 
 function aggregateImTrx() {
@@ -61,42 +76,45 @@ function aggregateImTrx() {
 
 // save data loaded
 var aggregateFileData = (fileData, callback) => {
-    var dataType = fileData.reg.dataType;
-    var providerCode = fileData.reg.providerCode;
-    var trxData = fileData.trx.data; // an array of transactions
-    var docCount = trxData.length;
+  var dataType = fileData.reg.dataType;
+  var providerCode = fileData.reg.providerCode;
+  var trxData = fileData.trx.data; // an array of transactions
+  var docCount = trxData.length;
 
-    var policyNumber;
-    var trxEntry;
+  var policyNumber;
+  var trxEntry;
+  var finPeriod;
 
-    //
-    // For every transaction recalculate the aggregated totals
-    //
+  //
+  // For every transaction recalculate the aggregated totals
+  //
   for (var i = 0, j = docCount; i < j; i++) {
-      trxEntry = trxData[i];
-      policyNumber = trxEntry.policyNumber;
-      finPeriod = trxEntry.fiscalPeriod;
+    trxEntry = trxData[i];
+    policyNumber = trxEntry.policyNumber;
+    finPeriod = trxEntry.fiscalPeriod;
     if (dataType == "COM") {
       aggregateComTrx(providerCode, finPeriod, policyNumber, (err, result) => {
+        console.log("---> Com Trx aggregation result", err, result);
         if (err) {
-          console.log("---> Aggregation failed", providerCode, finPeriod, policyNumber);
+          console.log("---> Com Trx aggregation failed", providerCode, finPeriod, policyNumber);
         }
         else {
-          console.log("---> Aggregation passed", providerCode, finPeriod, policyNumber);
+          console.log("---> Com Trx aggregation passed", providerCode, finPeriod, policyNumber);
         }
       });
     }
     else if (type == "IM") {
       aggregateImTrx(providerCode, finPeriod, policyNumber, (err, result) => {
         if (err) {
-          console.log("---> Aggregation failed", providerCode, finPeriod, policyNumber);
+          console.log("---> Im Trx Aggregation failed", providerCode, finPeriod, policyNumber);
         }
         else {
-          console.log("---> Aggregation passed", providerCode, finPeriod, policyNumber);
+          console.log("---> Im Trx Aggregation passed", providerCode, finPeriod, policyNumber);
         }
       });
     }
   }
+  var err = "xxx";
   callback( err, result);
 };
 

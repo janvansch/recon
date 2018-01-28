@@ -96,7 +96,7 @@ var reconSchema = new mongoose.Schema({
         type: String,
         trim: true
       },
-      period: {
+      fiscalPeriod: {
         type: Number
       },
       firstReferrer: {
