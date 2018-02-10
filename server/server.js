@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 //=============================================
 require('./config/config');
 //=============================================
@@ -16,7 +16,7 @@ var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 var {authenticate} = require('./middleware/authenticate');
 var {processFileData} = require('./middleware/processFileData');
-var {aggregateFileData} = require('./middleware/aggregateFileData');
+//var {aggregateReconTrx} = require('./middleware/aggregateReconTrx');
 
 const port = process.env.PORT;
 const publicPath = path.join(__dirname, '../public');
@@ -83,36 +83,28 @@ app.get('/', (req, res) => {
   res.render('index');
 });
 
-app.post('/saveFileData', (req, res) => {
+app.post('/saveFileData', async (req, res) => {
   // console.log("===> File Data: ", req);
-  var fileData = req.body;
-  //console.log("===> File Data Body: ", fileData);
-
-  // var regData = req.body.reg;
-  // console.log("===> Register data: ", regData);
-  // var trxData = req.body.trx.data;
-  // console.log("===> Recon data: ", trxData);
-
-  // Process file data
-  processFileData(fileData, (result) => {
+  try {
+    var fileData = req.body;
+    //console.log("===> File Data Body: ", fileData);
+    // Process file data
+    console.log(">>>> Wait for file data processing to complete.");
+    var result = await processFileData(fileData);
     console.log(">>>> File data processing result: ", result);
-    if (result = "200") {
-      aggregateFileData(fileData, (err, result) => {
-        console.log(">>>> File data aggregation result: ", err, result);
-        if (err) {
-          result = "400";
-        }
-      });
+    if (result != "200") {
+      var result = "400";
+      res.send(result);
     }
-    else if(result = "400") {
-      result = "400";
+    else {
+      res.send(result);
     }
-    console.log(">>>> File data processing result", result);
-
-  });
-
-  res.send(result);
-
+  }
+  catch (e) {
+    console.log(">>>> ERROR - File Processing: ", e.message);
+    var result = "400";
+    res.send(result);
+  }
 });
 
 app.post('/todos', authenticate, (req, res) => {
