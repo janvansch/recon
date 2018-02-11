@@ -4,16 +4,19 @@ const {ObjectID} = require('mongodb');
 
 const {Recon} = require('../models/recon');
 const {File} = require('../models/file');
-//
+// ======================
 // Sort data by attribute
-//
+// ======================
 function sortByAttribute(array, ...attrs) {
-  // Credit: by a8m on stackoverflow
+  // ----------------------------------------------
+  // Credit: sort function by a8m on stackoverflow
+  // ----------------------------------------------
   // generate an array of predicate-objects contains
   // property getter, and descending indicator
   let predicates = attrs.map(pred => {
     let descending = pred.charAt(0) === '-' ? -1 : 1;
-    pred = pred.replace(/^-/, '');
+    // if paramete's first character is "-" then sort decending, i.e. -1
+    pred = pred.replace(/^-/, ''); // remove "-"
     return {
       getter: o => o[pred],
       descend: descending
@@ -36,6 +39,70 @@ function sortByAttribute(array, ...attrs) {
     return result;
   })
   .map(item => item.src);
+}
+// ===================
+//  Update Recon Data
+// ===================
+function docCommit(providerCode, finPeriod, policyNumber, setData, pushData) {
+  // workaround for Mongoose problem -
+  // can't $set and $push together in one findOneAndUpdate
+  // extract aggregation data from $set data and execute individually
+  var aggrCommAmount = setData.comData.aggrCommAmount;
+  var aggrVatAmount = setData.comData.aggrVatAmount;
+  var aggrBrokerFeeAmount = setData.comData.aggrBrokerFeeAmount;
+  var aggrMonthCommissionAmount = setData.comData.aggrMonthCommissionAmount;
+  var aggrPremiumAmount = setData.comData.aggrPremiumAmount;
+  console.log("Set Data Extract: ", aggrCommAmount, aggrVatAmount, aggrBrokerFeeAmount, aggrMonthCommissionAmount, aggrPremiumAmount);
+
+  return new Promise((resolve, reject) => {
+
+    Recon.findOneAndUpdate(
+      {
+        'providerCode': providerCode,
+        'finPeriod': finPeriod,
+        'policyNumber': policyNumber
+      },
+      {
+        'providerCode': providerCode,
+        'finPeriod': finPeriod,
+        'policyNumber': policyNumber,
+        //"$set": setData,
+        'comData.aggrCommAmount' : aggrCommAmount,
+        'comData.aggrVatAmount' : aggrVatAmount,
+        'comData.aggrBrokerFeeAmount' : aggrBrokerFeeAmount,
+        'comData.aggrMonthCommissionAmount' : aggrMonthCommissionAmount,
+        'comData.aggrPremiumAmount' : aggrPremiumAmount,
+        $push: pushData
+      },
+      {
+        upsert: true,
+        new: true
+      },
+      (err, numAffected, raw) => {
+        if (err) {
+          console.log(">>>---> TRX save error: ", err );
+          var err = true;
+          var result = "";
+          reject(err);
+        }
+        else {
+          console.log(`err: ${err},
+            numAffected: ${numAffected.comData},
+            raw: ${raw}`
+          );
+          err = "";
+          result = true;
+          console.log(`>>>---> TRX save success -
+            Provider Code: ${providerCode},
+            Period: ${finPeriod},
+            Policy: ${policyNumber}`
+          );
+          resolve(result);
+        }
+      }
+    )
+
+  });
 }
 // =====================================
 // Get aggregation value from DB if any
@@ -112,9 +179,9 @@ function getAggregation(providerCode, finPeriod, policyNumber) {
     });
   });
 }
-/**************************
-  Process file data loaded
-***************************/
+// ==========================
+//  Process file data loaded
+// ==========================
 var processFileData = async (fileData) => {
   //var test = aggrValues(fileData);
   const regData = fileData.reg;
@@ -151,9 +218,9 @@ var processFileData = async (fileData) => {
     console.log(`The data type "${dataType}" is not valid.`);
     return;
   }
-  // =========================
+  // --------------------------
   // Update file load register
-  // =========================
+  // --------------------------
   // Setup File Register Entry
   regData.userId = userId;
   regData._id = hexId;
@@ -165,25 +232,26 @@ var processFileData = async (fileData) => {
     // return res;
     reject(res);
   });
-  // =====================
-  // Sort transaction data
-  // =====================
+  // --------------------------
+  // Sort commission file data
+  // --------------------------
   //console.log("====> unsorted: ", trxData);
   var trxDataSorted = sortByAttribute(trxData, 'productProviderCode', 'fiscalPeriod', 'policyNumber');
   // console.log("====> sorted: ", trxDataSorted);
-  // ========================================
+  // -----------------------------------------
   // Process data from commission file loaded
-  // ========================================
+  // -----------------------------------------
   for (var i = 0, j = trxCount; i < j; i++) {
     trx = trxDataSorted[i];
     trx.loadFile_id = hexId;
-
+    // ------------------------------------------
+    // Replace string values with numeric values
+    // ------------------------------------------
     commissionAmount = Number(trx.commissionAmount);
     vatAmount = Number(trx.vatAmount);
     brokerFeeAmount = Number(trx.brokerFeeAmount);
     monthCommissionAmount = Number(trx.monthCommissionAmount);
     premiumAmount = Number(trx.premiumAmount);
-
     trx.commissionAmount = commissionAmount;
     trx.vatAmount = vatAmount;
     trx.brokerFeeAmount = brokerFeeAmount;
@@ -194,14 +262,18 @@ var processFileData = async (fileData) => {
     finPeriod = trx.fiscalPeriod;
     currKey = providerCode+finPeriod+policyNumber;
 
-    console.log("----> Current Key: ", currKey);
-
     if (i == 0) {
       prevKey = "providerCode"+"999999"+"policyNumber";
-      console.log("----> Previous Key: ", prevKey);
       var x = 0;
     }
+
+    console.log("----> Current Key: ", currKey);
+    console.log("----> Previous Key: ", prevKey);
+
     if (currKey != prevKey) {
+      // -----------------------------------------------------
+      // New doc - get current aggregation values from DB doc
+      // -----------------------------------------------------
       try {
         aggrValues = await getAggregation(providerCode, finPeriod, policyNumber);
         console.log("----> Aggregation values returned: ", aggrValues);
@@ -213,121 +285,122 @@ var processFileData = async (fileData) => {
       }
       catch(error) {
         console.log("----> Aggregation failed for: ", providerCode, finPeriod, policyNumber);
+        result = "400";
       }
+      // -----------------------------------------------------------
+      // Add current transaction values to values retrieved from DB
+      // -----------------------------------------------------------
       aggrCommAmount = commissionAmount + aggrCommAmount;
       aggrVatAmount = vatAmount + aggrVatAmount;
       aggrBrokerFeeAmount = brokerFeeAmount + aggrBrokerFeeAmount;
       aggrMonthCommissionAmount = monthCommissionAmount + aggrMonthCommissionAmount;
       aggrPremiumAmount = premiumAmount + aggrPremiumAmount;
-      var x = x + 1;
+      // ----------------------------------------------------------------
+      // Start building data object for for DB update from file data row
+      // ----------------------------------------------------------------
+      x = x + 1;
       console.log(">>>----> Create new recon: ", i, x-1, currKey);
       reconData[x-1] = {
+        // Add key values
         providerCode : providerCode,
         finPeriod : finPeriod,
         policyNumber : policyNumber,
         comData : {
+          // Add aggregation values
           aggrCommAmount : aggrCommAmount,
           aggrVatAmount : aggrVatAmount,
           aggrBrokerFeeAmount : aggrBrokerFeeAmount,
           aggrMonthCommissionAmount : aggrMonthCommissionAmount,
           aggrPremiumAmount : aggrPremiumAmount,
+          // Add transaction data place holder
           comTransactions : []
         }
       }
-
+      // add transactions
       reconData[x-1].comData.comTransactions.push(trx);
 
       console.log("----> New Recon Added: ", i, x-1, currKey);
     }
     else {
+      // --------------------------------------------------------------
+      // Not a new doc - add row data from file to current data object
+      // --------------------------------------------------------------
       console.log(">>>---> Add trx data to recon: ", x-1, currKey);
-
+      // update aggregation values
       reconData[x-1].comData.aggrCommAmount = reconData[x-1].comData.aggrCommAmount + commissionAmount;
       reconData[x-1].comData.aggrVatAmount = reconData[x-1].comData.aggrVatAmount + vatAmount;
       reconData[x-1].comData.aggrBrokerFeeAmount = reconData[x-1].comData.aggrBrokerFeeAmount + brokerFeeAmount;
       reconData[x-1].comData.aggrMonthCommissionAmount = reconData[x-1].comData.aggrMonthCommissionAmount + monthCommissionAmount;
       reconData[x-1].comData.aggrPremiumAmount = reconData[x-1].comData.aggrPremiumAmount + premiumAmount;
-
+      // add transaction to current transactions
       reconData[x-1].comData.comTransactions.push(trx);
 
       console.log("----> Recon updated: ", i, x-1, currKey);
-      console.log("----> Recon CommData: ", reconData[x-1].comData);
+      console.log("----> Recon Commission Data: ", reconData[x-1].comData);
     }
 
     prevKey = providerCode+finPeriod+policyNumber;
-    console.log("----> Previous Key: ", prevKey);
-  } // end of processing loop
-  // ===================
-  // Save processed data
-  // ===================
-  Recon.insertMany(reconData, (error, docs) => {
-    if (error) {
-      console.log("----> ERROR: ", error);
-      result = "400"
-    }
-  });
-  return result;
 
-} // end of saveFileData function
+  } // end of processing loop - update data objects created
+  console.log("----> Start Data CommitRecon Process");
+  // ----------------------
+  // Commit processed data
+  // ----------------------
+  // Create components for Update command
+  var committed;
+  var reconDoc = {};
+  var docCount = reconData.length;
+  var setData = {};
+  var pushData = [];
+  console.log("----> Commit Q length: ", docCount);
+  for (var i = 0, j = docCount; i < j; i++) {
+    console.log("----> Commit Count: ", i);
+    reconDoc = reconData[i];
+    console.log("----> Recon Doc: ", reconDoc);
+    finPeriod = reconDoc.finPeriod;
+    policyNumber = reconDoc.policyNumber;
+    setData = {
+      comData : {
+        aggrCommAmount : reconDoc.comData.aggrCommAmount,
+        aggrVatAmount : reconDoc.comData.aggrVatAmount,
+        aggrBrokerFeeAmount : reconDoc.comData.aggrBrokerFeeAmount,
+        aggrMonthCommissionAmount : reconDoc.comData.aggrMonthCommissionAmount,
+        aggrPremiumAmount : reconDoc.comData.aggrPremiumAmount
+      }
+    };
+    pushData = {
+      "comData.comTransactions": {"$each": reconDoc.comData.comTransactions}
+    };
+
+    console.log(`----> Commit Data Blocks -
+      Provider Code: ${providerCode},
+      Period: ${finPeriod},
+      Policy: ${policyNumber},
+      Set Data: ${setData},
+      Push Data: ${pushData}`
+    );
+    // Commit document
+    try {
+      console.log("----> Wait for commit: ", providerCode, finPeriod, policyNumber);
+      committed = await docCommit(providerCode, finPeriod, policyNumber, setData, pushData);
+      console.log("----> Save result: ", committed);
+      if (!committed) {
+        console.log("----> commit failed: ", providerCode, finPeriod, policyNumber);
+        result = "400";
+      }
+      else {
+        console.log("----> commit success: ", providerCode, finPeriod, policyNumber);
+      }
+    }
+    catch(err) {
+      console.log("----> commit error: ", err.message);
+      result = "400";
+    }
+  } // end of write to DB loop
+  // ----
+  // Done
+  // ----
+  return result;
+} // end of processFileData function
 
 module.exports = {processFileData};
-
-// // Add commission transaction to recon doc
-// function appendComTrx(dataType, providerCode, finPeriod, policyNumber, trxEntry) {
-//   return new Promise((resolve, reject) => {
-//     Recon.findOneAndUpdate(
-//       {
-//         'providerCode': providerCode,
-//         'finPeriod': finPeriod,
-//         'policyNumber': policyNumber
-//       },
-//       {
-//         'providerCode': providerCode,
-//         'finPeriod': finPeriod,
-//         'policyNumber': policyNumber,
-//         // $set: {"comData": aggrData(providerCode, finPeriod, policyNumber)}
-//         // $set: await aggregator( providerCode, finPeriod, policyNumber, trxEntry),
-//         //'comData.aggrCommAmount': await aggregator( providerCode, finPeriod, policyNumber, trxEntry),
-//         //'comData.aggrCommAmount': ( (recon[0] == null) ? Number(trxEntry.commissionAmount) : recon[0].comData.aggrCommAmount + Number(trxEntry.commissionAmount)),
-//         // 'comData.aggrCommAmount': ( (recon[0] == null) ? Number(trxEntry.commissionAmount) : recom[0].comData.aggrCommAmount + Number(trxEntry.commissionAmount)),
-//         // 'comData.aggrVatAmount': 0,
-//         // 'comData.aggrBrokerFeeAmount': 0,
-//         // 'comData.aggrMonthCommissionAmount': 0,
-//         // 'comData.aggrPremiumAmount': 0,
-//         $push: {"comData.comTransactions": trxEntry}
-//       },
-//       {
-//         upsert: true,
-//         new: true
-//       },
-//       (err, numAffected, raw) => {
-//         if (err) {
-//           console.log(">>>---> TRX save error: ", err );
-//           var err = true;
-//           var result = "";
-//           reject(err);
-//         }
-//         else {
-//           console.log(`err: ${err}, numAffected: ${numAffected.comData}, raw: ${raw}`);
-//           tester( providerCode, finPeriod, policyNumber, trxEntry);
-//           err = "";
-//           result = true;
-//           console.log(`>>>---> TRX save success - Provider Code: ${providerCode}, Period: ${finPeriod} Policy: ${policyNumber}`);
-//           resolve(result);
-//         }
-//       }
-//     );
-//     // console.log(">>>---> Return: ", recon[0] );
-//     // if (!recon[0]) {
-//     //   console.log(">>>---> TRX save error: ", recon[0] );
-//     //   var result = false;
-//     //   reject(result);
-//     // }
-//     // else {
-//     //   // console.log(`err: ${err}, numAffected: ${numAffected}, raw: ${raw}`);
-//     //   result = true;
-//     //   console.log(`>>>---> TRX save success - Provider Code: ${providerCode}, Period: ${finPeriod} Policy: ${policyNumber}`);
-//     //   resolve(result);
-//     // }
-//   });
-// }
