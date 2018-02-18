@@ -15,7 +15,7 @@ var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 var {authenticate} = require('./middleware/authenticate');
-var {processFileData} = require('./middleware/processFileData');
+var {processComDataFile} = require('./middleware/processComDataFile');
 var {processMIDataFile} = require('./middleware/processMIDataFile');
 //var {aggregateReconTrx} = require('./middleware/aggregateReconTrx');
 
@@ -103,8 +103,8 @@ app.post('/saveFileData', async (req, res) => {
     // var result = await processFileData(fileData);
     if (dataType == "COM") {
       console.log(">>>> Wait for commission data file processing to complete.");
-      // var result = await processComDataFile(fileData);
-      var result = await processFileData(fileData);
+      var result = await processComDataFile(fileData);
+      // var result = await processFileData(fileData);
     }
     else if (dataType == "IM") {
       console.log(">>>> Wait for IM data file processing to complete.");

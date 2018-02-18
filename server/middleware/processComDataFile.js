@@ -182,7 +182,7 @@ function getAggregation(providerCode, finPeriod, policyNumber) {
 // ==========================
 //  Process file data loaded
 // ==========================
-var processFileData = async (fileData) => {
+var processComDataFile = async (fileData) => {
   //var test = aggrValues(fileData);
   const regData = fileData.reg;
   const trxData = fileData.trx.data; // an array of transactions
