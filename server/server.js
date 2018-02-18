@@ -16,6 +16,7 @@ var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 var {authenticate} = require('./middleware/authenticate');
 var {processFileData} = require('./middleware/processFileData');
+var {processMIDataFile} = require('./middleware/processMIDataFile');
 //var {aggregateReconTrx} = require('./middleware/aggregateReconTrx');
 
 const port = process.env.PORT;
@@ -25,14 +26,19 @@ const publicPath = path.join(__dirname, '../public');
 // Setup Express app
 //=============================================
 var app = express();
-console.log("===> Public Path: ", publicPath);
+console.log(">>>> Public Path: ", publicPath);
 app.use(express.static(publicPath));
 // app.use(express.static(publicPath));
 //app.use(express.static(__dirname + 'public'));
 
-app.use(bodyParser.urlencoded({ extended: false }));
-// app.use(bodyParser({limit: '50mb'}));
-app.use(bodyParser.json());
+//app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser.json());
+app.use( bodyParser.json({limit: '50mb'}) );
+app.use(bodyParser.urlencoded({
+  limit: '50mb',
+  extended: true,
+  parameterLimit:50000
+}));
 
 //=============================================
 // Setup EJS
@@ -86,11 +92,24 @@ app.get('/', (req, res) => {
 app.post('/saveFileData', async (req, res) => {
   // console.log("===> File Data: ", req);
   try {
-    var fileData = req.body;
+    const fileData = req.body;
+    const dataType = fileData.reg.dataType;
+    var result = "";
     //console.log("===> File Data Body: ", fileData);
+    console.log(">>>> Data Type: ", dataType);
+
     // Process file data
-    console.log(">>>> Wait for file data processing to complete.");
-    var result = await processFileData(fileData);
+
+    // var result = await processFileData(fileData);
+    if (dataType == "COM") {
+      console.log(">>>> Wait for commission data file processing to complete.");
+      // var result = await processComDataFile(fileData);
+      var result = await processFileData(fileData);
+    }
+    else if (dataType == "IM") {
+      console.log(">>>> Wait for IM data file processing to complete.");
+      var result = await processMIDataFile(fileData);
+    }
     console.log(">>>> File data processing result: ", result);
     if (result != "200") {
       var result = "400";

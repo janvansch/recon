@@ -190,7 +190,7 @@ var reconSchema = new mongoose.Schema({
       grossEarnedPremium: {
         type: Number
       },
-      grossWtittenCommission: {
+      grossWrittenCommission: {
         type: Number
       },
       grossEarnedCommission: {

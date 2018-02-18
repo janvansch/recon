@@ -301,6 +301,7 @@ function extractFileData(callback) {
   var fileTrxData = {
       'data': []
   };
+
   for (var row = 1, r = rowCount; row < r; row++) { // Ignore header row
     var tmpTrxData = {};
     for (var cell = 0, c = cellCount; cell < c; cell++) {
@@ -397,12 +398,12 @@ function readRules(dataSource) {
       '{ "fname" : "policyHolder" , "label" : "Policy Holder" , "datatype" : "string" , "size" : "50" , "required" : "false" },' +
       '{ "fname" : "initials" , "label" : "Initials" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
       '{ "fname" : "commissionType" , "label" : "Commission Type" , "datatype" : "string" , "size" : "2" , "required" : "false" },' +
-      '{ "fname" : "commissionAmount" , "label" : "Commission Amount" , "datatype" : "number" , "size" : "12" , "required" : "true" },' +
-      '{ "fname" : "vatAmount" , "label" : "VAT Amount" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
-      '{ "fname" : "brokerFeeAmount" , "label" : "Policy Fee" , "datatype" : "number" , "size":"12" , "required" : "false" },' +
-      '{ "fname" : "monthCommissionAmount" , "label" : "Monthly Commission" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
+      '{ "fname" : "commissionAmount" , "label" : "Commission Amount" , "datatype" : "amount" , "size" : "12" , "required" : "true" },' +
+      '{ "fname" : "vatAmount" , "label" : "VAT Amount" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
+      '{ "fname" : "brokerFeeAmount" , "label" : "Policy Fee" , "datatype" : "amount" , "size":"12" , "required" : "false" },' +
+      '{ "fname" : "monthCommissionAmount" , "label" : "Monthly Commission" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
       '{ "fname" : "revisedPolicyNumber" , "label" : "Revised Policy Number" , "datatype" : "string" , "size" : "15" , "required" : "false" },' +
-      '{ "fname" : "premiumAmount" , "label" : "Premium Amount" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
+      '{ "fname" : "premiumAmount" , "label" : "Premium Amount" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
       '{ "fname" : "lineOfBusiness" , "label" : "Policy Type" , "datatype" : "number" , "size" : "1" , "required" : "false" },' +
       '{ "fname" : "branchAgentCode" , "label" : "Branch Agent Code" , "datatype" : "string" , "size" : "7" , "required" : "true" },' +
       '{ "fname" : "fiscalPeriod" , "label" : "Fiscal Period" , "datatype" : "number" , "size" : "6" , "required" : "false" },' +
@@ -423,14 +424,14 @@ function readRules(dataSource) {
       '{ "fname" : "productSummary" , "label" : "Product Summary" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
       '{ "fname" : "contractPeriodFrom" , "label" : "Contract Period From" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
       '{ "fname" : "contractPeriodTo" , "label" : "Contract Period To" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
-      '{ "fname" : "grossWrittenPremium" , "label" : "Gross Written Premium" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
-      '{ "fname" : "grossEarnedPremium" , "label" : "Gross Earned Premium" , "datatype" : "string" , "size" : "15" , "required" : "false" },' +
-      '{ "fname" : "grossWrittenCommission" , "label" : "Gross Written Commission" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
-      '{ "fname" : "grossEarnedCommission" , "label" : "Gross Earned Commission" , "datatype" : "number" , "size" : "1" , "required" : "false" },' +
-      '{ "fname" : "netWrittenPremium" , "label" : "Net Written Premium" , "datatype" : "string" , "size" : "7" , "required" : "false" },' +
-      '{ "fname" : "netEarnedPremium" , "label" : "Net Earned Premium" , "datatype" : "string" , "size" : "6" , "required" : "false" },' +
-      '{ "fname" : "netWrittenCommission" , "label" : "Net Written Comm" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
-      '{ "fname" : "netEarnedCommission" , "label" : "Net Earned Commission" , "datatype" : "string" , "size" : "8" , "required" : "false" } ]}' //},' +
+      '{ "fname" : "grossWrittenPremium" , "label" : "Gross Written Premium" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
+      '{ "fname" : "grossEarnedPremium" , "label" : "Gross Earned Premium" , "datatype" : "amount" , "size" : "15" , "required" : "false" },' +
+      '{ "fname" : "grossWrittenCommission" , "label" : "Gross Written Commission" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
+      '{ "fname" : "grossEarnedCommission" , "label" : "Gross Earned Commission" , "datatype" : "amount" , "size" : "1" , "required" : "false" },' +
+      '{ "fname" : "netWrittenPremium" , "label" : "Net Written Premium" , "datatype" : "amount" , "size" : "7" , "required" : "false" },' +
+      '{ "fname" : "netEarnedPremium" , "label" : "Net Earned Premium" , "datatype" : "amount" , "size" : "6" , "required" : "false" },' +
+      '{ "fname" : "netWrittenCommission" , "label" : "Net Written Comm" , "datatype" : "amount" , "size" : "8" , "required" : "false" },' +
+      '{ "fname" : "netEarnedCommission" , "label" : "Net Earned Commission" , "datatype" : "amount" , "size" : "8" , "required" : "false" } ]}' //},' +
       /*'{ "fname":"in_place_file" , "label":"In Place File" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" } ]}' */
     ;
   }
