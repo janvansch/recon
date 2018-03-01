@@ -11,16 +11,6 @@ const {sortByAttribute} = require('../utils/sortByAttribute');
 //  Update Recon Data
 // ===================
 function docCommit(providerCode, finPeriod, policyNumber, setData, pushData) {
-  console.log(`>>>---> Set Data: ${setData}`);
-  // WORKAROUND: for Mongoose problem -
-  // can't $set and $push together in one findOneAndUpdate
-  // extract aggregation data from $set data and execute individually
-  // var aggrCommAmount = setData.comData.aggrCommAmount;
-  // var aggrVatAmount = setData.comData.aggrVatAmount;
-  // var aggrBrokerFeeAmount = setData.comData.aggrBrokerFeeAmount;
-  // var aggrMonthCommissionAmount = setData.comData.aggrMonthCommissionAmount;
-  // var aggrPremiumAmount = setData.comData.aggrPremiumAmount;
-  // console.log("Set Data Extract: ", aggrCommAmount, aggrVatAmount, aggrBrokerFeeAmount, aggrMonthCommissionAmount, aggrPremiumAmount);
 
   // WORKAROUND: for Mongoose problem -
   // can't $set and $push together in one findOneAndUpdate
@@ -33,10 +23,6 @@ function docCommit(providerCode, finPeriod, policyNumber, setData, pushData) {
   var aggrNetEarnedPremium = setData.imData.aggrNetEarnedPremium;
   var aggrNetWrittenCommission = setData.imData.aggrNetWrittenCommission;
   var aggrNetEarnedCommission = setData.imData.aggrNetEarnedCommission;
-
-  // console.log(`>>>---> Set Data - Workaround:
-  //   ${aggrGrossWrittenPremium}, ${aggrGrossEarnedPremium}, ${aggrGrossWrittenCommission}, ${aggrGrossEarnedCommission}, ${aggrNetWrittenPremium}, ${aggrNetEarnedPremium}, ${aggrNetWrittenCommission}, ${aggrNetEarnedCommission}`
-  // );
 
   return new Promise((resolve, reject) => {
 
@@ -51,12 +37,6 @@ function docCommit(providerCode, finPeriod, policyNumber, setData, pushData) {
         'finPeriod': finPeriod,
         'policyNumber': policyNumber,
         //"$set": setData,
-        // 'comData.aggrCommAmount' : aggrCommAmount,
-        // 'comData.aggrVatAmount' : aggrVatAmount,
-        // 'comData.aggrBrokerFeeAmount' : aggrBrokerFeeAmount,
-        // 'comData.aggrMonthCommissionAmount' : aggrMonthCommissionAmount,
-        // 'comData.aggrPremiumAmount' : aggrPremiumAmount,
-
         'imData.aggrGrossWrittenPremium' : aggrGrossWrittenPremium,
         'imData.aggrGrossEarnedPremium' : aggrGrossEarnedPremium,
         'imData.aggrGrossWrittenCommission' : aggrGrossWrittenCommission,
@@ -98,9 +78,9 @@ function docCommit(providerCode, finPeriod, policyNumber, setData, pushData) {
 
   });
 }
-// =====================================
-// Get aggregation value from DB if any
-// =====================================
+// ======================================
+// Get aggregation values from DB if any
+// ======================================
 function getAggregation(providerCode, finPeriod, policyNumber) {
   console.log("====> Aggregation parameters", providerCode, finPeriod, policyNumber );
   return new Promise((resolve) => {
@@ -129,10 +109,8 @@ function getAggregation(providerCode, finPeriod, policyNumber) {
     )
     .then((recon) => {
       if (recon[0] == null) {
-        console.log(">>>---> Path A - IM aggregation data not found");
-        // A document with the key may exists but does it contain the relevant
-        // aggregation data? If not add the Aggregation fields with zero
-        // values; else read the values from the DB and return these.
+        console.log(">>>---> Path A - IM aggregation: Document not found");
+        // No document found, create template for processing
         reconData = {
           providerCode : providerCode,
           finperiod : finPeriod,
@@ -152,28 +130,32 @@ function getAggregation(providerCode, finPeriod, policyNumber) {
         resolve(reconData);
       }
       else {
-        console.log(">>>---> Path B - IM aggregation data found");
-        console.log(`====> Recon IM data returned from DB:
-          ${recon[0].imData}
-        `);
+        // document found
+        // A document with the key may exists but does it contain the relevant
+        // aggregation data? If not add the Aggregation fields with zero
+        // values; else read the values from the DB and return these.
+        console.log(">>>---> Path B - IM aggregation: Document found");
+        // console.log(`====> Recon IM data returned from DB:
+        //   ${recon[0].imData}
+        // `);
 
+        //Only one document should be found
         if (recon.length > 1 ){
           console.log("====> ERROR: DB Aggr Find result: ", recon.length, recon);
           reject("Error - more than one document returned, DB error");
         }
 
         // A document with the search key exists but if it does not
-        // contain the relevant aggregation data, create and assign 0.
+        // contain the relevant aggregation fields, create and assign 0.
         var aggrGrossWrittenPremium = (typeof recon[0].imData.aggrGrossWrittenPremium === 'undefined') ? (0) : (recon[0].imData.aggrGrossWrittenPremium);
-
 
         var aggrGrossEarnedPremium = (typeof recon[0].imData.aggrGrossEarnedPremium === 'undefined') ? (0) : (recon[0].imData.aggrGrossEarnedPremium);
 
         var aggrGrossWrittenCommission = (typeof recon[0].imData.aggrGrossWrittenCommission === 'undefined') ? (0) : (recon[0].imData.aggrGrossWrittenCommission);
 
-        console.log("<<<1>>> Before conversion:", recon[0].imData.aggrGrossEarnedCommission);
+        // console.log("<<<1>>> Before conversion:", recon[0].imData.aggrGrossEarnedCommission);
         var aggrGrossEarnedCommission = (typeof recon[0].imData.aggrGrossEarnedCommission === 'undefined') ? (0) : (recon[0].imData.aggrGrossEarnedCommission);
-        console.log("<<<1>>> After conversion, final result:", aggrGrossEarnedCommission);
+        // console.log("<<<1>>> After conversion, final result:", aggrGrossEarnedCommission);
 
         var aggrNetWrittenPremium = (typeof recon[0].imData.aggrNetWrittenPremium === 'undefined') ? (0) : (recon[0].imData.aggrNetWrittenPremium);
 
@@ -183,7 +165,7 @@ function getAggregation(providerCode, finPeriod, policyNumber) {
 
         var aggrNetEarnedCommission = (typeof recon[0].imData.aggrNetEarnedCommission === 'undefined') ? (0) : (recon[0].imData.aggrNetEarnedCommission);
 
-        // create data object for return
+        // create document object to be return
         reconData = {
           providerCode : providerCode,
           finperiod : finPeriod,
@@ -217,7 +199,7 @@ function getAggregation(providerCode, finPeriod, policyNumber) {
 // ==========================
 // var processFileData = async (fileData) => {
 var processMIDataFile = async (fileData) => {
-  //var test = aggrValues(fileData);
+
   const regData = fileData.reg;
   const trxData = fileData.trx.data; // an array of transactions
   const dataType = regData.dataType;
@@ -236,11 +218,6 @@ var processMIDataFile = async (fileData) => {
   var reconData = [{}];
   var currKey;
   var prevKey;
-  // var commissionAmount = 0;
-  // var vatAmount = 0;
-  // var brokerFeeAmount = 0;
-  // var monthCommissionAmount = 0;
-  // var premiumAmount = 0;
   var grossWrittenPremium = 0;
   var grossEarnedPremium = 0;
   var grossWrittenCommission = 0;
@@ -251,12 +228,6 @@ var processMIDataFile = async (fileData) => {
   var netEarnedCommission = 0;
 
   var aggrValues ={};
-
-  // var aggrCommAmount = 0;
-  // var aggrVatAmount = 0;
-  // var aggrBrokerFeeAmount = 0;
-  // var aggrMonthCommissionAmount = 0;
-  // var aggrPremiumAmount = 0;
 
   var aggrGrossWrittenPremium = 0;
   var aggrGrossEarnedPremium = 0;
@@ -282,15 +253,12 @@ var processMIDataFile = async (fileData) => {
   regEntry.save().catch((e) => {
     console.log("---> Register Entry error: ", regEntry);
     result = "400";
-    // return res;
     reject(res);
   });
   // --------------------------
   // Sort commission file data
   // --------------------------
-  //console.log("====> unsorted: ", trxData);
   var trxDataSorted = sortByAttribute(trxData, 'productProviderCode', 'fiscalPeriod', 'policyNumber');
-  // console.log("====> sorted: ", trxDataSorted);
   // -----------------------------------------
   // Process data from commission file loaded
   // -----------------------------------------
@@ -300,34 +268,15 @@ var processMIDataFile = async (fileData) => {
     // ------------------------------------------
     // Replace string values with numeric values
     // ------------------------------------------
-    // get current transaction values and convert
-
-    // var y = objRules.filedef[cell].datatype;
-    // if ( y === "amount") {
-    //   var x = trxTable.rows[row].cells[cell].innerHTML;
-    // //   if (x.replace(/^\s+$/gm,'') == "-") {
-    //   if (x == "-") {
-    //     var data = 0;
-    //   }
-    //   else {
-    //     //     x = x.replace(/\s/g,'');
-    //     var data = x;
-    //   }
-    // }
-    // else {
-
-    console.log("----> Replace space and convert to number");
-    console.log("<<<0>>> Before conversion:", trx.grossWrittenPremium);
+    // Get current transaction values and convert
+    // Values in the IM data contains spaces remove this also
     grossWrittenPremium = (typeof trx.grossWrittenPremium === 'undefined' || trx.grossWrittenPremium === '-') ? (0) : (Number(trx.grossWrittenPremium.replace(/\s/g,'')));
-    console.log("<<<0>>> After conversion, final result:", grossWrittenPremium);
 
     grossEarnedPremium = (typeof trx.grossEarnedPremium === 'undefined' || trx.grossEarnedPremium === '-') ? (0) : (Number(trx.grossEarnedPremium.replace(/\s/g,'')));
 
     grossWrittenCommission = (typeof trx.grossWrittenCommission === 'undefined' || trx.grossWrittenCommission === '-') ? (0) : (Number(trx.grossWrittenCommission.replace(/\s/g,'')));
 
-    console.log("<<<0>>> Before conversion:", trx.grossEarnedCommission);
     grossEarnedCommission = (typeof trx.grossEarnedCommission === 'undefined' || trx.grossEarnedCommission === '-') ? (0) : (Number(trx.grossEarnedCommission.replace(/\s/g,'')));
-    console.log("<<<0>>> After conversion, final result:", grossEarnedCommission);
 
     netWrittenPremium =  (typeof trx.netWrittenPremium === 'undefined' || trx.netWrittenPremium === '-') ? (0) : (Number(trx.netWrittenPremium.replace(/\s/g,'')));
 
@@ -337,21 +286,7 @@ var processMIDataFile = async (fileData) => {
 
     netEarnedCommission =  (typeof trx.netEarnedCommission === 'undefined' || trx.netEarnedCommission === '-') ? (0) : (Number(trx.netEarnedCommission.replace(/\s/g,'')));
 
-    // console.log(`>>>---> Converted Data:
-    //   ${aggrGrossWrittenPremium}, ${aggrGrossEarnedPremium}, ${aggrGrossWrittenCommission}, ${aggrGrossEarnedCommission}, ${aggrNetWrittenPremium}, ${aggrNetEarnedPremium}, ${aggrNetWrittenCommission}, ${aggrNetEarnedCommission}`
-    // );
-
-    // grossWrittenPremium = Number(trx.grossWrittenPremium.replace(/\s/g,''));
-    // grossEarnedPremium = Number(trx.grossEarnedPremium.replace(/\s/g,''));
-    // grossWrittenCommission = Number(trx.grossWrittenCommission.replace(/\s/g,''));
-    // grossEarnedCommission = Number(trx.grossEarnedCommission.replace(/\s/g,''));
-    // netWrittenPremium = Number(trx.netWrittenPremium.replace(/\s/g,''));
-    // netEarnedPremium = Number(trx.netEarnedPremium.replace(/\s/g,''));
-    // netWrittenCommission = Number(trx.netWrittenCommission.replace(/\s/g,''));
-    // netEarnedCommission = Number(trx.netEarnedCommission.replace(/\s/g,''));
-
     // Replace current transaction values with converted values
-    console.log("----> Update with converted number");
     trx.grossWrittenPremium = grossWrittenPremium;
     trx.grossEarnedPremium = grossEarnedPremium;
     trx.grossWrittenCommission = grossWrittenCommission;
@@ -383,7 +318,8 @@ var processMIDataFile = async (fileData) => {
       // -----------------------------------------------------
       try {
         aggrValues = await getAggregation(providerCode, finPeriod, policyNumber);
-        console.log("----> Aggregation values returned: ", aggrValues);
+        // console.log("----> Aggregation values returned: ", aggrValues);
+
         // Values retrieved from DB
         aggrGrossWrittenPremium = aggrValues.imData.aggrGrossWrittenPremium;
         aggrGrossEarnedPremium = aggrValues.imData.aggrGrossEarnedPremium;
@@ -402,8 +338,8 @@ var processMIDataFile = async (fileData) => {
       // -----------------------------------------------------------
       // Add current transaction values to values retrieved from DB
       // -----------------------------------------------------------
-      console.log("<<<2>>> Before aggregation - DB Value:", aggrGrossEarnedCommission);
-      console.log("<<<2>>> Before aggregation - TRX Value:", grossEarnedCommission);
+      // console.log("<<<2>>> Before aggregation - DB Value:", aggrGrossEarnedCommission);
+      // console.log("<<<2>>> Before aggregation - TRX Value:", grossEarnedCommission);
       aggrGrossWrittenPremium = aggrGrossWrittenPremium + grossWrittenPremium;
       aggrGrossEarnedPremium = aggrGrossEarnedPremium + grossEarnedPremium;
       aggrGrossWrittenCommission = aggrGrossWrittenCommission + grossWrittenCommission;
@@ -412,9 +348,9 @@ var processMIDataFile = async (fileData) => {
       aggrNetEarnedPremium = aggrNetEarnedPremium + netEarnedPremium;
       aggrNetWrittenCommission = aggrNetWrittenCommission + netWrittenCommission;
       aggrNetEarnedCommission = aggrNetEarnedCommission + netEarnedCommission;
-      console.log("<<<2>>> After aggregation, final result:", aggrGrossEarnedCommission);
+      // console.log("<<<2>>> After aggregation, final result:", aggrGrossEarnedCommission);
       // ----------------------------------------------------------------
-      // Start building data object for for DB update from file data row
+      // Start building data object for for DB update from file data rows
       // ----------------------------------------------------------------
       x = x + 1;
       // console.log(">>>----> Create new recon: ", i, x-1, currKey);
@@ -443,8 +379,10 @@ var processMIDataFile = async (fileData) => {
       // Not a new doc - add row data from file to current data object
       // --------------------------------------------------------------
       // console.log(">>>---> Add trx data to recon: ", x-1, currKey);
-      console.log("<<<3>>> Before not new doc aggregation - Recon Data Value :", reconData[x-1].imData.aggrGrossEarnedCommission);
-      console.log("<<<3>>> Before not new doc aggregation - TRX Value :", grossEarnedCommission);
+
+      // Update aggregation values
+      // console.log("<<<3>>> Before not new doc aggregation - Recon Data Value :", reconData[x-1].imData.aggrGrossEarnedCommission);
+      // console.log("<<<3>>> Before not new doc aggregation - TRX Value :", grossEarnedCommission);
       reconData[x-1].imData.aggrGrossWrittenPremium = reconData[x-1].imData.aggrGrossWrittenPremium + grossWrittenPremium;
       reconData[x-1].imData.aggrGrossEarnedPremium = reconData[x-1].imData.aggrGrossEarnedPremium + grossEarnedPremium;
       reconData[x-1].imData.aggrGrossWrittenCommission = reconData[x-1].imData.aggrGrossWrittenCommission + grossWrittenCommission;
@@ -453,7 +391,7 @@ var processMIDataFile = async (fileData) => {
       reconData[x-1].imData.aggrNetEarnedPremium = reconData[x-1].imData.aggrNetEarnedPremium + netEarnedPremium;
       reconData[x-1].imData.aggrNetWrittenCommission = reconData[x-1].imData.aggrNetWrittenCommission + netWrittenCommission;
       reconData[x-1].imData.aggrNetEarnedCommission = reconData[x-1].imData.aggrNetEarnedCommission + netEarnedCommission;
-      console.log("<<<3>>> After not new doc aggregation: ", reconData[x-1].imData.aggrGrossEarnedCommission);
+      // console.log("<<<3>>> After not new doc aggregation: ", reconData[x-1].imData.aggrGrossEarnedCommission);
 
       // add transaction to current transactions
       reconData[x-1].imData.imTransactions.push(trx);
@@ -461,10 +399,10 @@ var processMIDataFile = async (fileData) => {
       console.log("----> Recon updated: ", i, x-1, currKey);
 
     }
-    console.log("----> Recon - IM Data: ", reconData[x-1].imData);
-    console.log(`>>>---> Converted Data:
-      ${aggrGrossWrittenPremium}, ${aggrGrossEarnedPremium}, ${aggrGrossWrittenCommission}, ${aggrGrossEarnedCommission}, ${aggrNetWrittenPremium}, ${aggrNetEarnedPremium}, ${aggrNetWrittenCommission}, ${aggrNetEarnedCommission}`
-    );
+    // console.log("----> Recon - IM Data: ", reconData[x-1].imData);
+    // console.log(`>>>---> Converted Data:
+    //   ${aggrGrossWrittenPremium}, ${aggrGrossEarnedPremium}, ${aggrGrossWrittenCommission}, ${aggrGrossEarnedCommission}, ${aggrNetWrittenPremium}, ${aggrNetEarnedPremium}, ${aggrNetWrittenCommission}, ${aggrNetEarnedCommission}`
+    // );
     prevKey = providerCode+finPeriod+policyNumber;
 
   } // end of processing loop - update data objects created
@@ -483,17 +421,11 @@ var processMIDataFile = async (fileData) => {
   for (var i = 0, j = docCount; i < j; i++) {
     console.log("----> Commit Count: ", i);
     reconDoc = reconData[i];
+
     // console.log("----> Recon Doc IM data: ", reconDoc);
     finPeriod = reconDoc.finPeriod;
     policyNumber = reconDoc.policyNumber;
     setData = {
-      // comData : {
-      //   aggrCommAmount : reconDoc.comData.aggrCommAmount,
-      //   aggrVatAmount : reconDoc.comData.aggrVatAmount,
-      //   aggrBrokerFeeAmount : reconDoc.comData.aggrBrokerFeeAmount,
-      //   aggrMonthCommissionAmount : reconDoc.comData.aggrMonthCommissionAmount,
-      //   aggrPremiumAmount : reconDoc.comData.aggrPremiumAmount
-      // }
       imData : {
         aggrGrossWrittenPremium : reconDoc.imData.aggrGrossWrittenPremium,
         aggrGrossEarnedPremium : reconDoc.imData.aggrGrossEarnedPremium,
@@ -504,13 +436,10 @@ var processMIDataFile = async (fileData) => {
         aggrNetWrittenCommission : reconDoc.imData.aggrNetWrittenCommission,
         aggrNetEarnedCommission : reconDoc.imData.aggrNetEarnedCommission,
         // Add transaction data place holder
-        // comTransactions : []
         imTransactions : []
       }
-
     };
     pushData = {
-      //"comData.comTransactions": {"$each": reconDoc.comData.comTransactions}
       "imData.imTransactions": {"$each": reconDoc.imData.imTransactions}
     };
 
@@ -521,21 +450,22 @@ var processMIDataFile = async (fileData) => {
     //   Set Data: ${setData},
     //   Push Data: ${pushData}`
     // );
+
     // Commit document
     try {
-      // console.log("----> Wait for commit: ", providerCode, finPeriod, policyNumber);
+      console.log("----> Wait for commit: ", providerCode, finPeriod, policyNumber);
       committed = await docCommit(providerCode, finPeriod, policyNumber, setData, pushData);
       // console.log("----> Save result: ", committed);
       if (!committed) {
-        // console.log("----> commit failed: ", providerCode, finPeriod, policyNumber);
+        console.log("----> commit failed: ", providerCode, finPeriod, policyNumber);
         result = "400";
       }
       else {
-        // console.log("----> commit success: ", providerCode, finPeriod, policyNumber);
+        console.log("----> commit success: ", providerCode, finPeriod, policyNumber);
       }
     }
     catch(err) {
-      // console.log("----> commit error: ", err.message);
+      console.log("----> commit error: ", err.message);
       result = "400";
     }
   } // end of write to DB loop

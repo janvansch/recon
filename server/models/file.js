@@ -20,11 +20,7 @@ var fileSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  period: {
-    type: Number,
-    required: true
-  },
-  year: {
+  processPeriod: {
     type: Number,
     required: true
   },

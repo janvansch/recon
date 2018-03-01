@@ -262,7 +262,7 @@ function extractFileData(callback) {
     var dataType = "COM";
   }
   else {
-    var dataType = "IM";
+    var dataType = "MI";
   }
   //
   // Read file definition for file type
@@ -275,13 +275,15 @@ function extractFileData(callback) {
   //
   var filename = document.getElementById("fileUpload");
   var input = document.getElementsByName("fileRegData");
-  console.log("Input data:", input[0].value, input[1].value, input[2].value);
+  console.log("Input data: ", input[0].value, input[1].value, input[2].value);
   var trxTable = document.getElementById("dataList");
-  console.log("Data List Table:", trxTable);
+  console.log("Data List Table: ", trxTable);
   var rowCount = trxTable.rows.length;
-  console.log("Data List Table rows:", rowCount);
+  console.log("Data List Table rows: ", rowCount);
   var cellCount = trxTable.rows[0].cells.length;
-  console.log("Data List Table cells:", cellCount);
+  console.log("Data List Table cells: ", cellCount);
+  processPeriod = (input[2].value + input[1].value);
+  console.log("Process Period: ", processPeriod);
   //
   // Create file register document as an object
   //
@@ -289,8 +291,7 @@ function extractFileData(callback) {
     providerCode : input[0].value,
     dataType : dataType,
     filename : filename.value,
-    period : input[1].value,
-    year : input[2].value,
+    processPeriod : processPeriod,
     timestamp : timestamp,
     docCount : rowCount
     // userId : userId - added on server

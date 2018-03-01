@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 //=============================================
 require('./config/config');
 //=============================================
@@ -17,20 +17,29 @@ var {User} = require('./models/user');
 var {authenticate} = require('./middleware/authenticate');
 var {processComDataFile} = require('./middleware/processComDataFile');
 var {processMIDataFile} = require('./middleware/processMIDataFile');
-//var {aggregateReconTrx} = require('./middleware/aggregateReconTrx');
+var {getFileRegData} = require('./middleware/getFileRegData');
 
 const port = process.env.PORT;
 const publicPath = path.join(__dirname, '../public');
-// const publicPath = path.join(__dirname, '../public');
+//const viewPath = path.join(__dirname, '../views');
+
+//console.log(">>>> Port: ", port);
+console.log(">>>> Public Path: ", publicPath);
+//console.log(">>>> Views: ", viewPath);
+
 //=============================================
 // Setup Express app
 //=============================================
 var app = express();
-console.log(">>>> Public Path: ", publicPath);
-app.use(express.static(publicPath));
-// app.use(express.static(publicPath));
-//app.use(express.static(__dirname + 'public'));
 
+//=============================================
+// Setup view engine - EJS
+//=============================================
+//app.set('views', viewPath);
+app.set('view engine', 'ejs');
+//app.engine('ejs', ejs.renderFile);
+
+app.use(express.static(publicPath));
 //app.use(bodyParser.urlencoded({ extended: false }));
 // app.use(bodyParser.json());
 app.use( bodyParser.json({limit: '50mb'}) );
@@ -41,14 +50,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 //=============================================
-// Setup EJS
-//=============================================
-app.set('view engine', 'ejs');
-app.engine('html', ejs.renderFile);
-// //app.set('views', path.join(__dirname +'/views'));
-
-//=============================================
-// Setup HBS
+// Setup view engine - HBS
 //=============================================
 // app.set('view engine', 'hbs');
 // //app.set('views', path.join(__dirname +'/views'));
@@ -86,7 +88,11 @@ app.get('/bad', (req, res) => {
 
 app.get('/', (req, res) => {
   // res.render('index.html');
-  res.render('index');
+  console.log (">>>> Get Request", req.query);
+  getFileRegData(req, (contents) => {
+    console.log(">>>> Content: ", contents);
+    res.render('pages/index', {content : contents});
+  });
 });
 
 app.post('/saveFileData', async (req, res) => {
@@ -106,8 +112,8 @@ app.post('/saveFileData', async (req, res) => {
       var result = await processComDataFile(fileData);
       // var result = await processFileData(fileData);
     }
-    else if (dataType == "IM") {
-      console.log(">>>> Wait for IM data file processing to complete.");
+    else if (dataType == "MI") {
+      console.log(">>>> Wait for MI data file processing to complete.");
       var result = await processMIDataFile(fileData);
     }
     console.log(">>>> File data processing result: ", result);

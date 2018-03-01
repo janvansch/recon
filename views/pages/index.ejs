@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<!--
+  *************************************************************
+  * Product: MI Recon - Version 0.0.1                         *
+  * Created by: Johannes van Schalkwyk                        *
+  * License: All rights reserved                              *
+  * Trading as: Nimble Design (nimbledesign.co.za)            *
+  * Code location: c:OneDrive\Projects\public\index.html      *
+  *************************************************************
+-->
+
+<html lang="en">
+
+<head>
+  <% include ../partials/head %>
+</head>
+
+<!--<body onload="setup()"> -->
+<body class="container">
+  <header>
+    <h2><% include ../partials/header %></h2>
+  </header>
+
+  <main>
+    <h3>Files Loaded:</h3>
+    <form action="/" method="get">
+      Select view:
+      <input type="radio" name="filter" value="0" checked> Default
+      <input type="radio" name="filter" value="1"> All
+      <input type="radio" name="filter" value="2"> Selection >
+
+      From year:
+      <input type="text" name="fromYear">
+
+      To year:
+      <input type="text" name="toYear">
+
+      From period:
+      <select id="fromPer" name="fromPeriod">
+          <option value="01">01</option>
+          <option value="02">02</option>
+          <option value="03">03</option>
+          <option value="04">04</option>
+          <option value="05">05</option>
+          <option value="06">06</option>
+          <option value="07">07</option>
+          <option value="08">08</option>
+          <option value="09">09</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+      </select>
+
+      To period:
+      <select id="toPer" name="toPeriod">
+          <option value="01">01</option>
+          <option value="02">02</option>
+          <option value="03">03</option>
+          <option value="04">04</option>
+          <option value="05">05</option>
+          <option value="06">06</option>
+          <option value="07">07</option>
+          <option value="08">08</option>
+          <option value="09">09</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+      </select>
+
+      <input type="submit" value="Refresh data">
+
+    </form>
+    <br />
+
+    <table id = "fileReg" cellpadding="0" cellspacing="0">
+      <tr>
+        <th>Provider Code</th>
+        <th>Data Type</th>
+        <th>Filename</th>
+        <th>Process Period</th>
+        <th>Timestamp</th>
+        <th>Document Count</th>
+      </tr>
+      <% for (var i = 0; i < content.length; i++) { %>
+        <tr>
+          <td><%= content[i].providerCode %></td>
+          <td><%= content[i].dataType %></td>
+          <td><%= content[i].filename %></td>
+          <td><%= content[i].processPeriod %></td>
+          <td><%= content[i].timestamp %></td>
+          <td><%= content[i].docCount %></td>
+        </tr>
+      <% } %>
+    </table>
+
+    <hr />
+    <h3>File Load:</h3>
+
+    Provide required information and click "Load File"
+    <br />
+
+    Data type:
+    <input type="radio" name="dataSource" value="0" checked>  Place File
+    <input type="radio" name="dataSource" value="1">  Management Information
+    <br />
+
+    Delimiter:
+    <input type="radio" name="fileDelimiter" value="0" checked>  Comma
+    <input type="radio" name="fileDelimiter" value="1">  Semicolon
+
+
+    Select file:
+    <input type="file" id="fileUpload" size="80">
+    <input type="button" value="Load File" onclick="loadData()">
+
+    <hr />
+
+    <h3> File Content:</h3>
+    To commit the data provide the following information and click "Commit Data"
+    <br />
+
+    File Source:
+    <input list="providers"  placeholder="File Provider" name="fileRegData" size="20">
+      <datalist id="providers">
+        <option value="AMU">
+        <option value="CSU">
+        <option value="ECH">
+        <option value="MIR">
+        <option value="SHA">
+        <option value="VUM">
+      </datalist>
+
+    Process month:
+    <input list="periods" placeholder="Period" name="fileRegData" size="6">
+      <datalist id="periods">
+        <option value="01">
+        <option value="02">
+        <option value="03">
+        <option value="04">
+        <option value="05">
+        <option value="06">
+        <option value="07">
+        <option value="08">
+        <option value="09">
+        <option value="10">
+        <option value="11">
+        <option value="12">
+      </datalist>
+
+    Process year:
+    <input list="years" placeholder="Year" name="fileRegData" size="6">
+      <datalist id="years">
+        <option value="2011">
+        <option value="2012">
+        <option value="2013">
+        <option value="2014">
+        <option value="2015">
+        <option value="2016">
+        <option value="2017">
+        <option value="2018">
+        <option value="2019">
+        <option value="2020">
+        <option value="2021">
+        <option value="2022">
+        <option value="2023">
+        <option value="2024">
+       </datalist>
+
+    <input type="button" id="dataCommit" value="Commit File Data" onclick = "commitFileData()">
+
+    <hr>
+
+    <h3 id="dList"> Data list</h3>
+
+    <div id="tablePos"></div>
+
+    <hr>
+
+  	<noscript>Sorry, your browser does not support JavaScript!</noscript>
+
+
+  </main>
+
+  <footer>
+    <% include ../partials/footer %>
+  </footer>
+
+  <!--<script src="/js/libs/ejs.min.js"></script>-->
+  <script type="text/javascript" src="/js/script.js"></script>
+
+</body>
+
+</html>
