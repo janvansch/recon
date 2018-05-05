@@ -1,12 +1,97 @@
 /*
         *************************************************************
-        * Product: PolOwn                                           *
-        * Description: JavaScript for frontend functionality        * 
+        * Product: Recon                                            *
+        * Description: CSS Styling for UI                           *
         * Created by: Johannes van Schalkwyk                        *
         * License: All rights reserved                              *
-        * Location: c:\Node\PolOwn\frontend\css\style.css           *
+        * Location: c:\Node\Recon\public\css\style.css              *
         *************************************************************
 */
+/* --------------------------------------------------------- */
+/* Basic Setup */
+/* --------------------------------------------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    background-color: #fff;
+    color: #555;
+    /*font-family: 'Lato', 'Arial', sans-serif;*/
+    font-weight: 300;
+    font-size: 20px;
+    text-rendering: optimizeLegibility;
+    /* overflow-x: hidden; */
+}
+
+.clearfix {
+    zoom: 1
+}
+
+.clearfix:after {
+    content: '.';
+    clear: both;
+    display: block;
+    height: 0;
+    visibility: hidden;
+}
+
+/* --------------------------------------------------------- */
+/* Reusable Components */
+/* --------------------------------------------------------- */
+
+
+/* ------ Headings ------ */
+
+
+.page-title {
+  font-size: 180%;
+  text-align: center;
+}
+
+/* --------------------------------------------------------- */
+/* Header */
+/* --------------------------------------------------------- */
+
+.app-title {
+  float: left;
+  font-size: 150%;
+}
+
+/* Main Navigation */
+.main-nav {
+    float: right;
+    list-style: none;
+    margin-top: 5px;
+}
+
+.main-nav li {
+    display: inline-block;
+    margin-left: 20px;
+}
+
+.main-nav li a:link,
+.main-nav li a:visited {
+    padding: 2px 0;
+    color: #cf6317;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-size: 90%;
+    border-bottom: 2px solid transparent;
+    -webkit-transition: border-botton 0.2s;
+    transition: border-botton 0.2s;
+}
+
+.main-nav li a:hover,
+.main-nav li a:active {
+    border-bottom: 2px solid #cf6317;
+}
+
+
 
 #modal_wrapper.overlay:before {
             content: " ";
@@ -42,12 +127,13 @@
         #inputC {
             float: right;
         }
-        
-        body
+
+      /* body
         {
             font-family: Arial;
             font-size: 10pt;
         }
+      */
         table
         {
             border: 1px solid #cccccc;
@@ -72,7 +158,7 @@
             border-collapse: collapse;
             margin-left: 0px;
         }
-        #linkhead { 
+        #linkhead {
             width: 345px;
             align: center;
             display: block;
@@ -111,7 +197,7 @@
         	z-index: 5;
         	margin: 150px auto 0px auto;
             padding: 15px;
-        	width: 345px; 
+        	width: 345px;
         	height: 320px;
         	background: #A0A099;
         	color: #000000;

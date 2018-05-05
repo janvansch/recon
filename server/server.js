@@ -18,6 +18,7 @@ var {authenticate} = require('./middleware/authenticate');
 var {processComDataFile} = require('./middleware/processComDataFile');
 var {processMIDataFile} = require('./middleware/processMIDataFile');
 var {getFileRegData} = require('./middleware/getFileRegData');
+var {getReconData} = require('./middleware/getReconData');
 
 const port = process.env.PORT;
 const publicPath = path.join(__dirname, '../public');
@@ -85,7 +86,9 @@ app.get('/bad', (req, res) => {
     errorMessage: 'Unable to handle request'
   });
 });
-
+//---------------------------------------------------------
+// Page Presentation Routes
+//---------------------------------------------------------
 app.get('/', (req, res) => {
   // res.render('index.html');
   console.log (">>>> Get Request", req.query);
@@ -95,6 +98,17 @@ app.get('/', (req, res) => {
   });
 });
 
+app.get('/recon', (req, res) => {
+  res.render('pages/recon.ejs', {
+    pageTitle: 'Recon Report'
+  });
+});
+//----------------------------------------------------------
+// Data Service Routes
+//----------------------------------------------------------
+//
+// Save data extracted from file
+//
 app.post('/saveFileData', async (req, res) => {
   // console.log("===> File Data: ", req);
   try {
@@ -131,6 +145,17 @@ app.post('/saveFileData', async (req, res) => {
     res.send(result);
   }
 });
+//
+// Extract data required for recon report
+//
+app.post('/reconData', (req, res) => {
+  // console.log (">>>> Get Request", req.body);
+  getReconData(req, (reconData) => {
+    console.log(">>>> Content: ", reconData);
+    res.send(reconData);
+  });
+});
+
 
 app.post('/todos', authenticate, (req, res) => {
   var todo = new Todo({

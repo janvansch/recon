@@ -19,12 +19,15 @@
 <!--<body onload="setup()"> -->
 <body class="container">
   <header>
-    <h2><% include ../partials/header %></h2>
+    <% include ../partials/header %>
+    <h1 class="page-title">Load Recon Data</h1>
   </header>
 
   <main>
+    <!-- Display a list of files loaded -->
     <h3>Files Loaded:</h3>
     <form action="/" method="get">
+      <!-- filter list -->
       Select view:
       <input type="radio" name="filter" value="0" checked> Default
       <input type="radio" name="filter" value="1"> All
@@ -71,8 +74,9 @@
       <input type="submit" value="Refresh data">
 
     </form>
-    <br />
+    <br/>
 
+    <!-- Display list in a table -->
     <table id = "fileReg" cellpadding="0" cellspacing="0">
       <tr>
         <th>Provider Code</th>
@@ -83,7 +87,11 @@
         <th>Document Count</th>
       </tr>
       <% for (var i = 0; i < content.length; i++) { %>
-        <tr>
+        <tr
+          onmouseover="changeColor(this, true);"
+          onmouseout="changeColor(this, false);"
+          onclick="getFileDetail(content[i]._id)"
+        >
           <td><%= content[i].providerCode %></td>
           <td><%= content[i].dataType %></td>
           <td><%= content[i].filename %></td>
@@ -94,16 +102,17 @@
       <% } %>
     </table>
 
-    <hr />
-    <h3>File Load:</h3>
+    <hr/>
 
+    <!-- File load interface -->
+    <h3>File Load:</h3>
     Provide required information and click "Load File"
-    <br />
+    <br/>
 
     Data type:
     <input type="radio" name="dataSource" value="0" checked>  Place File
     <input type="radio" name="dataSource" value="1">  Management Information
-    <br />
+    <br/>
 
     Delimiter:
     <input type="radio" name="fileDelimiter" value="0" checked>  Comma
@@ -114,11 +123,12 @@
     <input type="file" id="fileUpload" size="80">
     <input type="button" value="Load File" onclick="loadData()">
 
-    <hr />
+    <hr/>
 
+    <!-- Interface to submit data to server -->
     <h3> File Content:</h3>
     To commit the data provide the following information and click "Commit Data"
-    <br />
+    <br/>
 
     File Source:
     <input list="providers"  placeholder="File Provider" name="fileRegData" size="20">
@@ -169,13 +179,13 @@
 
     <input type="button" id="dataCommit" value="Commit File Data" onclick = "commitFileData()">
 
-    <hr>
+    <hr/>
 
-    <h3 id="dList"> Data list</h3>
+    <h3 id="dList"> Data list:</h3>
 
     <div id="tablePos"></div>
 
-    <hr>
+    <hr/>
 
   	<noscript>Sorry, your browser does not support JavaScript!</noscript>
 

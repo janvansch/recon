@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+
+<!--
+  *************************************************************
+  * Product: MI Recon - Version 0.0.1                         *
+  * Created by: Johannes van Schalkwyk                        *
+  * License: All rights reserved                              *
+  * Trading as: Nimble Design (nimbledesign.co.za)            *
+  * Code location: c:OneDrive\Projects\public\index.html      *
+  *************************************************************
+-->
+
+<html lang="en">
+
+  <head>
+    <% include ../partials/head %>
+  </head>
+
+  <!--<body onload="setup()"> -->
+  <body class="container">
+    <header>
+      <% include ../partials/header %>
+      <h1 class="page-title"><%= pageTitle %></h1>
+    </header>
+
+    <main>
+      <!-- Display a list of files loaded -->
+      <h3>Report Options:</h3>
+
+      <form>
+        Provider:
+        <select name="reconOption">
+          <option value="AMU">AMU</option>
+          <option value="CSU">CSU</option>
+          <option value="ECH">ECH</option>
+          <option value="MIR">MIR</option>
+          <option value="SHA">SHA</option>
+          <option value="VUM">VUM</option>
+        </select>
+
+        Year:
+        <input type="text" name="reconOption">
+
+        Period:
+        <select name="reconOption">
+          <option value="01">01</option>
+          <option value="02">02</option>
+          <option value="03">03</option>
+          <option value="04">04</option>
+          <option value="05">05</option>
+          <option value="06">06</option>
+          <option value="07">07</option>
+          <option value="08">08</option>
+          <option value="09">09</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+        </select>
+
+        <!-- <input type="submit" value="Retrieve Data"> -->
+        <input type="button" value="Retrieve Data" onclick = "reconReport()">
+      </form>
+      <!-- db.getCollection('recons').find({finPeriod:201710,providerCode:"AMU",policyNumber:"AMCCHV143714M"})
+      -->
+
+      <!-- Display list in a table -->
+
+
+      <hr/>
+
+      <h3 id="dList"> Report:</h3>
+
+      <div id="tablePos"></div>
+
+      <hr/>
+
+    	<noscript>Sorry, your browser does not support JavaScript!</noscript>
+
+
+    </main>
+
+    <footer>
+      <% include ../partials/footer %>
+    </footer>
+
+    <!--<script src="/js/libs/ejs.min.js"></script>-->
+    <script type="text/javascript" src="/js/script.js"></script>
+
+  </body>
+
+</html>

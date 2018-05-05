@@ -17,10 +17,13 @@ function docCommit(providerCode, finPeriod, policyNumber, setData, pushData) {
   // extract aggregation data from $set data and execute individually
   var aggrGrossWrittenPremium = setData.imData.aggrGrossWrittenPremium;
   var aggrGrossEarnedPremium = setData.imData.aggrGrossEarnedPremium;
+
   var aggrGrossWrittenCommission = setData.imData.aggrGrossWrittenCommission;
   var aggrGrossEarnedCommission = setData.imData.aggrGrossEarnedCommission;
+
   var aggrNetWrittenPremium = setData.imData.aggrNetWrittenPremium;
   var aggrNetEarnedPremium = setData.imData.aggrNetEarnedPremium;
+
   var aggrNetWrittenCommission = setData.imData.aggrNetWrittenCommission;
   var aggrNetEarnedCommission = setData.imData.aggrNetEarnedCommission;
 
@@ -39,10 +42,13 @@ function docCommit(providerCode, finPeriod, policyNumber, setData, pushData) {
         //"$set": setData,
         'imData.aggrGrossWrittenPremium' : aggrGrossWrittenPremium,
         'imData.aggrGrossEarnedPremium' : aggrGrossEarnedPremium,
+
         'imData.aggrGrossWrittenCommission' : aggrGrossWrittenCommission,
         'imData.aggrGrossEarnedCommission' : aggrGrossEarnedCommission,
+
         'imData.aggrNetWrittenPremium' : aggrNetWrittenPremium,
         'imData.aggrNetEarnedPremium' : aggrNetEarnedPremium,
+
         'imData.aggrNetWrittenCommission' : aggrNetWrittenCommission,
         'imData.aggrNetEarnedCommission' : aggrNetEarnedCommission,
 
@@ -115,15 +121,20 @@ function getAggregation(providerCode, finPeriod, policyNumber) {
           providerCode : providerCode,
           finperiod : finPeriod,
           policyNumber : policyNumber,
+
           imData : {
             aggrGrossWrittenPremium : 0,
             aggrGrossEarnedPremium : 0,
+
             aggrGrossWrittenCommission : 0,
             aggrGrossEarnedCommission : 0,
+
             aggrNetWrittenPremium : 0,
             aggrNetEarnedPremium : 0,
+
             aggrNetWrittenCommission : 0,
             aggrNetEarnedCommission : 0,
+
             imTransactions : []
           }
         }
@@ -170,15 +181,20 @@ function getAggregation(providerCode, finPeriod, policyNumber) {
           providerCode : providerCode,
           finperiod : finPeriod,
           policyNumber : policyNumber,
+
           imData : {
             aggrGrossWrittenPremium: aggrGrossWrittenPremium,
             aggrGrossEarnedPremium: aggrGrossEarnedPremium,
+
             aggrGrossWrittenCommission: aggrGrossWrittenCommission,
             aggrGrossEarnedCommission: aggrGrossEarnedCommission,
+
             aggrNetWrittenPremium: aggrNetWrittenPremium,
             aggrNetEarnedPremium: aggrNetEarnedPremium,
+
             aggrNetWrittenCommission: aggrNetWrittenCommission,
             aggrNetEarnedCommission: aggrNetEarnedCommission,
+
             imTransactions : []
           }
         }
@@ -238,7 +254,7 @@ var processMIDataFile = async (fileData) => {
   var aggrNetWrittenCommission = 0;
   var aggrNetEarnedCommission = 0;
 
-  if (dataType != "IM") {
+  if (dataType != "MI") {
     console.log(`The data type "${dataType}" is not valid.`);
     return;
   }
@@ -289,10 +305,13 @@ var processMIDataFile = async (fileData) => {
     // Replace current transaction values with converted values
     trx.grossWrittenPremium = grossWrittenPremium;
     trx.grossEarnedPremium = grossEarnedPremium;
+
     trx.grossWrittenCommission = grossWrittenCommission;
     trx.grossEarnedCommission = grossEarnedCommission;
+
     trx.netWrittenPremium = netWrittenPremium;
     trx.netEarnedPremium = netEarnedPremium;
+
     trx.netWrittenCommission = netWrittenCommission;
     trx.netEarnedCommission = netEarnedCommission;
     //
@@ -323,10 +342,13 @@ var processMIDataFile = async (fileData) => {
         // Values retrieved from DB
         aggrGrossWrittenPremium = aggrValues.imData.aggrGrossWrittenPremium;
         aggrGrossEarnedPremium = aggrValues.imData.aggrGrossEarnedPremium;
+
         aggrGrossWrittenCommission = aggrValues.imData.aggrGrossWrittenCommission;
         aggrGrossEarnedCommission = aggrValues.imData.aggrGrossEarnedCommission;
+
         aggrNetWrittenPremium = aggrValues.imData.aggrNetWrittenPremium;
         aggrNetEarnedPremium = aggrValues.imData.aggrNetEarnedPremium;
+
         aggrNetWrittenCommission = aggrValues.imData.aggrNetWrittenCommission;
         aggrNetEarnedCommission = aggrValues.imData.aggrNetEarnedCommission;
 
@@ -342,12 +364,16 @@ var processMIDataFile = async (fileData) => {
       // console.log("<<<2>>> Before aggregation - TRX Value:", grossEarnedCommission);
       aggrGrossWrittenPremium = aggrGrossWrittenPremium + grossWrittenPremium;
       aggrGrossEarnedPremium = aggrGrossEarnedPremium + grossEarnedPremium;
+
       aggrGrossWrittenCommission = aggrGrossWrittenCommission + grossWrittenCommission;
       aggrGrossEarnedCommission = aggrGrossEarnedCommission + grossEarnedCommission;
+
       aggrNetWrittenPremium = aggrNetWrittenPremium + netWrittenPremium;
       aggrNetEarnedPremium = aggrNetEarnedPremium + netEarnedPremium;
+
       aggrNetWrittenCommission = aggrNetWrittenCommission + netWrittenCommission;
       aggrNetEarnedCommission = aggrNetEarnedCommission + netEarnedCommission;
+
       // console.log("<<<2>>> After aggregation, final result:", aggrGrossEarnedCommission);
       // ----------------------------------------------------------------
       // Start building data object for for DB update from file data rows
@@ -358,15 +384,20 @@ var processMIDataFile = async (fileData) => {
         providerCode : providerCode,
         finPeriod : finPeriod,
         policyNumber : policyNumber,
+
         imData : {
           aggrGrossWrittenPremium : aggrGrossWrittenPremium,
           aggrGrossEarnedPremium : aggrGrossEarnedPremium,
+
           aggrGrossWrittenCommission : aggrGrossWrittenCommission,
           aggrGrossEarnedCommission : aggrGrossEarnedCommission,
+
           aggrNetWrittenPremium : aggrNetWrittenPremium,
           aggrNetEarnedPremium : aggrNetEarnedPremium,
+
           aggrNetWrittenCommission : aggrNetWrittenCommission,
           aggrNetEarnedCommission : aggrNetEarnedCommission,
+
           imTransactions : []
         }
       }
@@ -383,14 +414,23 @@ var processMIDataFile = async (fileData) => {
       // Update aggregation values
       // console.log("<<<3>>> Before not new doc aggregation - Recon Data Value :", reconData[x-1].imData.aggrGrossEarnedCommission);
       // console.log("<<<3>>> Before not new doc aggregation - TRX Value :", grossEarnedCommission);
+
       reconData[x-1].imData.aggrGrossWrittenPremium = reconData[x-1].imData.aggrGrossWrittenPremium + grossWrittenPremium;
+
       reconData[x-1].imData.aggrGrossEarnedPremium = reconData[x-1].imData.aggrGrossEarnedPremium + grossEarnedPremium;
+
       reconData[x-1].imData.aggrGrossWrittenCommission = reconData[x-1].imData.aggrGrossWrittenCommission + grossWrittenCommission;
+
       reconData[x-1].imData.aggrGrossEarnedCommission = reconData[x-1].imData.aggrGrossEarnedCommission + grossEarnedCommission;
+
       reconData[x-1].imData.aggrNetWrittenPremium = reconData[x-1].imData.aggrNetWrittenPremium + netWrittenPremium;
+
       reconData[x-1].imData.aggrNetEarnedPremium = reconData[x-1].imData.aggrNetEarnedPremium + netEarnedPremium;
+
       reconData[x-1].imData.aggrNetWrittenCommission = reconData[x-1].imData.aggrNetWrittenCommission + netWrittenCommission;
+
       reconData[x-1].imData.aggrNetEarnedCommission = reconData[x-1].imData.aggrNetEarnedCommission + netEarnedCommission;
+
       // console.log("<<<3>>> After not new doc aggregation: ", reconData[x-1].imData.aggrGrossEarnedCommission);
 
       // add transaction to current transactions
@@ -429,12 +469,16 @@ var processMIDataFile = async (fileData) => {
       imData : {
         aggrGrossWrittenPremium : reconDoc.imData.aggrGrossWrittenPremium,
         aggrGrossEarnedPremium : reconDoc.imData.aggrGrossEarnedPremium,
+
         aggrGrossWrittenCommission : reconDoc.imData.aggrGrossWrittenCommission,
         aggrGrossEarnedCommission : reconDoc.imData.aggrGrossEarnedCommission,
+
         aggrNetWrittenPremium : reconDoc.imData.aggrNetWrittenPremium,
         aggrNetEarnedPremium : reconDoc.imData.aggrNetEarnedPremium,
+
         aggrNetWrittenCommission : reconDoc.imData.aggrNetWrittenCommission,
         aggrNetEarnedCommission : reconDoc.imData.aggrNetEarnedCommission,
+
         // Add transaction data place holder
         imTransactions : []
       }

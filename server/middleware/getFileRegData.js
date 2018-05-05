@@ -83,7 +83,7 @@ var getFileRegData = (request, callback) => {
     File.find(
       query,
       {
-        _id : 0,
+        _id : 1,
         "providerCode" : 1,
         "dataType" : 1,
         "filename" : 1,
@@ -98,6 +98,7 @@ var getFileRegData = (request, callback) => {
         // No document found, create empty doc for display
         var fileList = [
           {
+            _id : "-",
             providerCode : "-",
             dataType : "-",
             filename : "-",
@@ -106,6 +107,7 @@ var getFileRegData = (request, callback) => {
             docCount : "-"
           },
           {
+            _id : "-",
             providerCode : "-",
             dataType : "-",
             filename : "-",

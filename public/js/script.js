@@ -1,3 +1,4 @@
+"use strict";
 /*******************************************
  * File load and display functions section *
  *******************************************/
@@ -36,14 +37,14 @@ function loadData() {
     // load file data definition
     //
     var fileRules = readRules(dataSource);
-    var listPrompt = 'Data list - Place File data';
+    var listPrompt = 'Data List - Place File Data';
   }
   else if (dataSource == 1) {
     //
     // load file data definition
     //
     var fileRules = readRules(dataSource);
-    var listPrompt = 'Data list - MI data';
+    var listPrompt = 'Data List - MI File Data';
   }
   //
   // Extract data from file and display
@@ -188,6 +189,7 @@ function displayData(listContent, listPrompt, objRules) {
   //
   for (var j = 0; j < colCount; j++) {
       var headerCell = headerRow.insertCell(-1);
+      // console.log("Header Labels: ", objRules.filedef[j].label);
       headerCell.innerHTML = objRules.filedef[j].label;
   }
   //
@@ -211,6 +213,7 @@ function displayData(listContent, listPrompt, objRules) {
           // insert a cell
           //
           var tableCell = tableRow.insertCell(-1);
+/*
           //
           // handle the &amp problem in name and initials
           //
@@ -219,14 +222,19 @@ function displayData(listContent, listPrompt, objRules) {
               // "/&/g" = regular expression to replace all
               // "/&/gi" = regular expression to replace all, not case sensitive
           }
+*/
           //
-          // insert cell content
+          // insert content into table cell
           //
-          tableCell.innerHTML = listContent[i][j].trim();
+          //console.log("Table Cell: ", i, j, listContent[i][j]);
+          tableCell.innerHTML = (isString(listContent[i][j]) ? (listContent[i][j].trim()) : (listContent[i][j]));
+          // tableCell.innerHTML = listContent[i][j].trim();
           // tableCell.innerHTML = listContent[i][j];
       } // end of column loop
   } // end of row loop
+
   // console.log(">>> Data display table created", table);
+
   //
   // Insert Table into DOM for display
   //
@@ -329,7 +337,133 @@ function extractFileData(callback) {
   callback(fileData);
 }
 //================================================
-// Send save request to server
+// Send loaded file data to server
+//================================================
+function commitFileData() {
+  //
+  // Send file register document to the server.
+  // Server will create the file register document and save the
+  // recon data with a reference to file register entry.
+  //
+  extractFileData((fileData) => {
+    var method = "POST";
+    var route = "/saveFileData";
+    serverRequest(method, route, fileData, (resp) => {
+      // if (!resp.status == 200) {
+      //   alert("Data send failed.");
+      // }
+      console.log("---> Commit file data result: ", resp.status);
+    });
+  });
+}
+//==============================================
+// Extract Recon Report parameter data from DOM
+//==============================================
+function getReconParams(callback) {
+  //
+  // Get parameter data from DOM
+  //
+  var input = document.getElementsByName("reconOption");
+  console.log("Input data: ", input[0].value, input[1].value, input[2].value);
+  //
+  // Create server message data string
+  //
+  var paramExtract = {
+    provider : input[0].value,
+    year : input[1].value,
+    period: input[2].value
+  };
+  var reportParams = JSON.stringify(paramExtract);
+  console.log("===> JSON Param: ", reportParams);
+  callback(reportParams);
+}
+//================================================
+// Request Recon Report data from server
+//================================================
+function reconReport() {
+  //
+  // Get Recon Report parameters and request data from the server.
+  //
+  getReconParams(params => {
+    console.log("Parameters: ", params);
+    var method = "POST";
+    var route = "/reconData";
+    //
+    // Request required data from serverRequest
+    //
+    serverRequest(method, route, params, (response) => {
+      // response = { status : xhttp.status, text : xhttp.responseText}
+      var reconData = JSON.parse(response.text); // convert JSON text into JS object
+      // console.log("---> Recon Data: ", reconData);
+      //
+      // load report layout definition
+      //
+      var dataSource = '2';
+      var objRules = readRules(dataSource);
+      var prompt = 'Recon Data for:' + params;
+
+      var reportData = [];
+
+      var rowCount = reconData.length;
+      for (var i=0; i < rowCount; i++) {
+        console.log("---> Recon Document: ", i, reconData[i]);
+        //
+        // Add missing sections to documents
+        //
+        // console.log("'im' Before: ", reconData[i].imData);
+        reconData[i].imData = (typeof reconData[i].imData === 'undefined') ? ({}) : (reconData[i].imData);
+        // console.log("'im' After: ", reconData[i].imData);
+
+        // console.log("'com' Before: ", reconData[i].comData);
+        reconData[i].comData = (typeof reconData[i].comData === 'undefined') ? ({}) : (reconData[i].comData);
+        // console.log("'com' After: ", reconData[i].comData);
+        //
+        // Extract data from reconData into reportData
+        //
+        // header data
+        var cells = [];
+        /*
+        cells.push(
+          (isUndefined(reconData[i].providerCode) ?
+          (" - ") :
+          (reconData[i].providerCode));
+        */
+        cells.push((typeof reconData[i].providerCode === 'undefined') ? (" - ") : (reconData[i].providerCode));
+        cells.push((typeof reconData[i].finPeriod === 'undefined') ? (" - ") : (reconData[i].finPeriod));
+        cells.push((typeof reconData[i].policyNumber === 'undefined') ? (" - ") : (reconData[i].policyNumber));
+        // comData
+        cells.push((typeof reconData[i].comData.aggrCommAmount === 'undefined') ? (" - ") : (reconData[i].comData.aggrCommAmount));
+        cells.push((typeof reconData[i].comData.aggrVatAmount === 'undefined') ? (" - ") : (reconData[i].comData.aggrVatAmount));
+        cells.push((typeof reconData[i].comData.aggrBrokerFeeAmount === 'undefined') ? (" - ") : (reconData[i].comData.aggrBrokerFeeAmount));
+        cells.push((typeof reconData[i].comData.aggrMonthCommissionAmount === 'undefined') ? (" - ") : (reconData[i].comData.aggrMonthCommissionAmount));
+        cells.push((typeof reconData[i].comData.aggrPremiumAmount === 'undefined') ? (" - ") : (reconData[i].comData.aggrPremiumAmount));
+        // IM data
+        cells.push((typeof reconData[i].imData.aggrGrossWrittenPremium === 'undefined') ? (" - ") : (reconData[i].imData.aggrGrossWrittenPremium));
+        cells.push((typeof reconData[i].imData.aggrGrossEarnedPremium === 'undefined') ? (" - ") : (reconData[i].imData.aggrGrossEarnedPremium));
+        cells.push((typeof reconData[i].imData.aggrGrossWrittenCommission === 'undefined') ? (" - ") : (reconData[i].imData.aggrGrossWrittenCommission));
+        cells.push((typeof reconData[i].imData.aggrGrossEarnedCommission === 'undefined') ? (" - ") : (reconData[i].imData.aggrGrossEarnedCommission));
+        cells.push((typeof reconData[i].imData.aggrNetWrittenPremium === 'undefined') ? (" - ") : (reconData[i].imData.aggrNetWrittenPremium));
+        cells.push((typeof reconData[i].imData.aggrNetEarnedPremium === 'undefined') ? (" - ") : (reconData[i].imData.aggrNetEarnedPremium));
+        cells.push((typeof reconData[i].imData.aggrNetWrittenCommission === 'undefined') ? (" - ") : (reconData[i].imData.aggrNetWrittenCommission));
+        cells.push((typeof reconData[i].imData.aggrNetEarnedCommission === 'undefined') ? (" - ") : (reconData[i].imData.aggrNetEarnedCommission));
+
+        // console.log("---> Report Row cells: ", i, cells);
+
+        reportData[i] = cells;
+
+        console.log("---> Report Row Data: ", i, reportData[i]);
+      };
+      //
+      // Display Report
+      //
+      displayData(reportData, prompt, objRules);
+    });
+  });
+
+}
+
+//================================================
+// AJAX request to server
 //================================================
 function serverRequest(method, route, payload, callback) {
   console.log("===> File data payload : ", payload);
@@ -353,7 +487,10 @@ function serverRequest(method, route, payload, callback) {
       //
       // Request complete and successful response from server
       //
-      var response = xhttp.status;
+      var response = {
+        status : xhttp.status,
+        text : xhttp.responseText
+      };
       console.log("response:", response);
       callback(response);
     }
@@ -364,81 +501,87 @@ function serverRequest(method, route, payload, callback) {
   xhttp.setRequestHeader("Content-type", "application/json");
   xhttp.send(payload);
 }
-//================================================
-// Send loaded file data to server
-//================================================
-function commitFileData() {
-  //
-  // Send file register document to the server.
-  // Server will create the file register document and save the
-  // recon data with a reference to file register entry.
-  //
-  extractFileData((fileData) => {
-    var method = "POST";
-    var route = "/saveFileData";
-    serverRequest(method, route, fileData, (resp) => {
-      // if (!resp == 200) {
-      //   alert("Data send failed.");
-      // }
-      console.log("---> Commit file data result: ", resp);
-    });
-  });
-}
-//
-// Function that return the data definitions as an object
-//
-function readRules(dataSource) {
-  // var placeFileDef = require("place-file-def.json"); ??????
-  if (dataSource == 0) {
-    // string with JSON syntax
-    var jText = '{ "filedef" : [' +
-      '{ "fname" : "productProviderCode" , "label" : "Product Provider Code" , "datatype" : "string" , "size" : "3" , "required" : "true" },' +
-      '{ "fname" : "marketersCode" , "label" : "Marketers Code" , "datatype" : "string" , "size"  :"8" , "required" : "false" },' +
-      '{ "fname" : "sourceCode" , "label" : "Source Code" , "datatype" : "string" , "size" : "20" , "required" : "true" },' +
-      '{ "fname" : "policyNumber" , "label" : "Policy Number" , "datatype" : "string" , "size" : "15", "required" : "true" },' +
-      '{ "fname" : "policyHolder" , "label" : "Policy Holder" , "datatype" : "string" , "size" : "50" , "required" : "false" },' +
-      '{ "fname" : "initials" , "label" : "Initials" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
-      '{ "fname" : "commissionType" , "label" : "Commission Type" , "datatype" : "string" , "size" : "2" , "required" : "false" },' +
-      '{ "fname" : "commissionAmount" , "label" : "Commission Amount" , "datatype" : "amount" , "size" : "12" , "required" : "true" },' +
-      '{ "fname" : "vatAmount" , "label" : "VAT Amount" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
-      '{ "fname" : "brokerFeeAmount" , "label" : "Policy Fee" , "datatype" : "amount" , "size":"12" , "required" : "false" },' +
-      '{ "fname" : "monthCommissionAmount" , "label" : "Monthly Commission" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
-      '{ "fname" : "revisedPolicyNumber" , "label" : "Revised Policy Number" , "datatype" : "string" , "size" : "15" , "required" : "false" },' +
-      '{ "fname" : "premiumAmount" , "label" : "Premium Amount" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
-      '{ "fname" : "lineOfBusiness" , "label" : "Policy Type" , "datatype" : "number" , "size" : "1" , "required" : "false" },' +
-      '{ "fname" : "branchAgentCode" , "label" : "Branch Agent Code" , "datatype" : "string" , "size" : "7" , "required" : "true" },' +
-      '{ "fname" : "fiscalPeriod" , "label" : "Fiscal Period" , "datatype" : "number" , "size" : "6" , "required" : "false" },' +
-      '{ "fname" : "firstReferrer" , "label" : "1st Referrer" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
-      '{ "fname" : "secondReferrer" , "label" : "2nd Referrer" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
-      '{ "fname" : "thirdReferrer" , "label" : "3rd Referrer" , "datatype" : "string" , "size" : "8" , "required" : "false" } ]}'
-    ;
-  }
-  else {
-    var jText = '{ "filedef" : [' +
-      '{ "fname" : "fiscalPeriod" , "label" : "Fiscal Period" , "datatype" : "string" , "size" : "3" , "required" : "false" },' +
-      '{ "fname" : "providerCode" , "label" : "Provider Code" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
-      '{ "fname" : "providerBrokerCode" , "label" : "Provider Broker Code" , "datatype" : "string" , "size" : "20" , "required" : "false" },' +
-      '{ "fname" : "stiProviderBrokerCode" , "label" : "STI PBC" , "datatype" : "string" , "size" : "15" , "required" : "false" },' +
-      '{ "fname" : "policyNumber" , "label" : "Policy Number" , "datatype" : "string" , "size" : "50" , "required" : "false" },' +
-      '{ "fname" : "stiPolicy" , "label" : "STI POL" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
-      '{ "fname" : "productGroup" , "label" : "Product Group" , "datatype" : "string" , "size" : "2" , "required" : "false" },' +
-      '{ "fname" : "productSummary" , "label" : "Product Summary" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
-      '{ "fname" : "contractPeriodFrom" , "label" : "Contract Period From" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
-      '{ "fname" : "contractPeriodTo" , "label" : "Contract Period To" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
-      '{ "fname" : "grossWrittenPremium" , "label" : "Gross Written Premium" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
-      '{ "fname" : "grossEarnedPremium" , "label" : "Gross Earned Premium" , "datatype" : "amount" , "size" : "15" , "required" : "false" },' +
-      '{ "fname" : "grossWrittenCommission" , "label" : "Gross Written Commission" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
-      '{ "fname" : "grossEarnedCommission" , "label" : "Gross Earned Commission" , "datatype" : "amount" , "size" : "1" , "required" : "false" },' +
-      '{ "fname" : "netWrittenPremium" , "label" : "Net Written Premium" , "datatype" : "amount" , "size" : "7" , "required" : "false" },' +
-      '{ "fname" : "netEarnedPremium" , "label" : "Net Earned Premium" , "datatype" : "amount" , "size" : "6" , "required" : "false" },' +
-      '{ "fname" : "netWrittenCommission" , "label" : "Net Written Comm" , "datatype" : "amount" , "size" : "8" , "required" : "false" },' +
-      '{ "fname" : "netEarnedCommission" , "label" : "Net Earned Commission" , "datatype" : "amount" , "size" : "8" , "required" : "false" } ]}' //},' +
-      /*'{ "fname":"in_place_file" , "label":"In Place File" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" } ]}' */
-    ;
-  }
+
+//========================================================
+// Read required data definition as an object
+//========================================================
+function readRules(definition) {
+
+  switch (definition) {
+    case '0':
+      console.log("Rules case: 0 (COM)");
+      // string with JSON syntax
+      var jText = '{ "filedef" : [' +
+        '{ "fname" : "productProviderCode" , "label" : "Product Provider Code" , "datatype" : "string" , "size" : "3" , "required" : "true" },' +
+        '{ "fname" : "marketersCode" , "label" : "Marketers Code" , "datatype" : "string" , "size"  :"8" , "required" : "false" },' +
+        '{ "fname" : "sourceCode" , "label" : "Source Code" , "datatype" : "string" , "size" : "20" , "required" : "true" },' +
+        '{ "fname" : "policyNumber" , "label" : "Policy Number" , "datatype" : "string" , "size" : "15", "required" : "true" },' +
+        '{ "fname" : "policyHolder" , "label" : "Policy Holder" , "datatype" : "string" , "size" : "50" , "required" : "false" },' +
+        '{ "fname" : "initials" , "label" : "Initials" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
+        '{ "fname" : "commissionType" , "label" : "Commission Type" , "datatype" : "string" , "size" : "2" , "required" : "false" },' +
+        '{ "fname" : "commissionAmount" , "label" : "Commission Amount" , "datatype" : "amount" , "size" : "12" , "required" : "true" },' +
+        '{ "fname" : "vatAmount" , "label" : "VAT Amount" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
+        '{ "fname" : "brokerFeeAmount" , "label" : "Policy Fee" , "datatype" : "amount" , "size":"12" , "required" : "false" },' +
+        '{ "fname" : "monthCommissionAmount" , "label" : "Monthly Commission" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
+        '{ "fname" : "revisedPolicyNumber" , "label" : "Revised Policy Number" , "datatype" : "string" , "size" : "15" , "required" : "false" },' +
+        '{ "fname" : "premiumAmount" , "label" : "Premium Amount" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
+        '{ "fname" : "lineOfBusiness" , "label" : "Policy Type" , "datatype" : "number" , "size" : "1" , "required" : "false" },' +
+        '{ "fname" : "branchAgentCode" , "label" : "Branch Agent Code" , "datatype" : "string" , "size" : "7" , "required" : "true" },' +
+        '{ "fname" : "fiscalPeriod" , "label" : "Fiscal Period" , "datatype" : "number" , "size" : "6" , "required" : "false" },' +
+        '{ "fname" : "firstReferrer" , "label" : "1st Referrer" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
+        '{ "fname" : "secondReferrer" , "label" : "2nd Referrer" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
+        '{ "fname" : "thirdReferrer" , "label" : "3rd Referrer" , "datatype" : "string" , "size" : "8" , "required" : "false" } ]}'
+      ;
+    break;
+    case '1':
+      console.log("Rules case: 1 (IM)");
+      var jText = '{ "filedef" : [' +
+        '{ "fname" : "fiscalPeriod" , "label" : "Fiscal Period" , "datatype" : "string" , "size" : "3" , "required" : "false" },' +
+        '{ "fname" : "providerCode" , "label" : "Provider Code" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
+        '{ "fname" : "providerBrokerCode" , "label" : "Provider Broker Code" , "datatype" : "string" , "size" : "20" , "required" : "false" },' +
+        '{ "fname" : "stiProviderBrokerCode" , "label" : "STI PBC" , "datatype" : "string" , "size" : "15" , "required" : "false" },' +
+        '{ "fname" : "policyNumber" , "label" : "Policy Number" , "datatype" : "string" , "size" : "50" , "required" : "false" },' +
+        '{ "fname" : "stiPolicy" , "label" : "STI POL" , "datatype" : "string" , "size" : "8" , "required" : "false" },' +
+        '{ "fname" : "productGroup" , "label" : "Product Group" , "datatype" : "string" , "size" : "2" , "required" : "false" },' +
+        '{ "fname" : "productSummary" , "label" : "Product Summary" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
+        '{ "fname" : "contractPeriodFrom" , "label" : "Contract Period From" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
+        '{ "fname" : "contractPeriodTo" , "label" : "Contract Period To" , "datatype" : "number" , "size" : "12" , "required" : "false" },' +
+        '{ "fname" : "grossWrittenPremium" , "label" : "Gross Written Premium" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
+        '{ "fname" : "grossEarnedPremium" , "label" : "Gross Earned Premium" , "datatype" : "amount" , "size" : "15" , "required" : "false" },' +
+        '{ "fname" : "grossWrittenCommission" , "label" : "Gross Written Commission" , "datatype" : "amount" , "size" : "12" , "required" : "false" },' +
+        '{ "fname" : "grossEarnedCommission" , "label" : "Gross Earned Commission" , "datatype" : "amount" , "size" : "1" , "required" : "false" },' +
+        '{ "fname" : "netWrittenPremium" , "label" : "Net Written Premium" , "datatype" : "amount" , "size" : "7" , "required" : "false" },' +
+        '{ "fname" : "netEarnedPremium" , "label" : "Net Earned Premium" , "datatype" : "amount" , "size" : "6" , "required" : "false" },' +
+        '{ "fname" : "netWrittenCommission" , "label" : "Net Written Comm" , "datatype" : "amount" , "size" : "8" , "required" : "false" },' +
+        '{ "fname" : "netEarnedCommission" , "label" : "Net Earned Commission" , "datatype" : "amount" , "size" : "8" , "required" : "false" } ]}' //},' +
+        /*'{ "fname":"in_place_file" , "label":"In Place File" , "datatype":"string" , "size":"8" , "used":"true" , "edit":"true" , "blank":"true" , "ref":"true" } ]}' */
+      ;
+    break;
+    case '2':
+      console.log("Rules case: 2 (REP)");
+      var jText = '{ "filedef" : [' +
+        '{ "fname" : "providerCode" , "label" : "Provider Code" },' +
+        '{ "fname" : "finPeriod" , "label" : "Period" },' +
+        '{ "fname" : "policyNumber" , "label" : "Policy Number" },' +
+        '{ "fname" : "comData.aggrCommAmount" , "label" : "Aggr Commission" },' +
+        '{ "fname" : "comData.aggrVatAmount" , "label" : "Aggr VAT" },' +
+        '{ "fname" : "comData.aggrBrokerFeeAmount" , "label" : "Aggr Broker Fee" },' +
+        '{ "fname" : "comData.aggrMonthCommissionAmount" , "label" : "Aggr Monthly Commission" },' +
+        '{ "fname" : "comData.aggrPremiumAmount" , "label" : "Aggr Premium" },' +
+        '{ "fname" : "imData.aggrGrossWrittenPremium" , "label" : "Aggr Gross Written Premium" },' +
+        '{ "fname" : "imData.aggrGrossEarnedPremium" , "label" : "Aggr Gross Earned Premium" },' +
+        '{ "fname" : "imData.aggrGrossWrittenCommission" , "label" : "Aggr Gross Written Commission" },' +
+        '{ "fname" : "imData.aggrGrossEarnedCommission" , "label" : "Aggr Gross Earned Commission" },' +
+        '{ "fname" : "imData.aggrNetWrittenPremium" , "label" : "Aggr Net Written Premium" },' +
+        '{ "fname" : "imData.aggrNetEarnedPremium" , "label" : "Aggr Net Earned Premium" },' +
+        '{ "fname" : "imData.aggrNetWrittenCommission" , "label" : "Aggr Net Written Comm" },' +
+        '{ "fname" : "imData.aggrNetEarnedCommission" , "label" : "Aggr Net Earned Commission" } ]}'
+      ;
+    break;
+  };
+  // console.log("Definition set: ", jText);
   var obj = JSON.parse(jText); // convert JSON text into JS object
-  // var obj = JSON.parse(placeFileDef); // convert JSON text into JS object
-  console.log("Place File Definition: ", obj);
+  // console.log("JSON Definition: ", obj);
   return obj;
 }
 
@@ -465,7 +608,7 @@ function formEnable() {
 //
 // Highlight a row/cell in a table
 //
-function ChangeColor(tableRow, highLight) {
+function changeColor(tableRow, highLight) {
     if (highLight) {
         // tableRow.style.backgroundColor = '#dcfac9';
         tableRow.style.backgroundColor = '#F7B733';
@@ -487,7 +630,16 @@ function isNumber(o) {
     return typeof o == "number" || (typeof o == "object" && o.constructor === Number);
 }
 //
-// DOM edit functions by https://www.scribd.com/document/2279811/DOM-Append-Text-and-Elements-With-Javascript
+// Test if data item is undefined
+//
+function isUndefined(o) {
+    return typeof o === 'undefined';
+}
+
+/*
+DOM edit functions by
+https://www.scribd.com/document/2279811/DOM-Append-Text-and-Elements-With-Javascript
+*/
 //
 // add text to existing element
 //
